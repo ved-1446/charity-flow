@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+node_modules/
+.vscode/
+charityflow-backend/uploads/
+BACKSTREET TECHRUSH CHARITY FLOW.zip
+SINGLE PROMPT.pdf

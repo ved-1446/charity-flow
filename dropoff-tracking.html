@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Logistics Monitor | Charity Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #1d3557;
+      --secondary-color: #e63946;
+      --accent-color: #457b9d;
+      --success-color: #2a9d8f;
+      --warning-bg: #fff3cd;
+      --warning-text: #856404;
+      --light-bg: #f4f7f6;
+    }
+
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--light-bg);
+      color: var(--primary-color);
+    }
+
+    .hero {
+      height: 35vh;
+      background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1950&q=80') center/cover no-repeat;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      position: relative;
+    }
+
+    .profile-chip {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      backdrop-filter: blur(5px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-chip:hover { background: rgba(255,255,255,0.25); }
+    .profile-dropdown {
+      position: absolute;
+      top: 50px;
+      right: 20px;
+      background: white;
+      color: var(--primary-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 250px;
+      display: none;
+      flex-direction: column;
+      text-align: left;
+      z-index: 2000;
+      overflow: hidden;
+    }
+    .profile-dropdown.show { display: flex; }
+    .dropdown-item {
+      padding: 10px 15px;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #eee;
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item .time { color: #888; font-size: 0.7rem; margin-top: 4px; }
+
+    .site-title { font-size: 4.5rem; font-weight: 700; margin: 0; }
+    .tagline { font-size: 1.2rem; font-weight: 400; min-height: 1.5em; opacity: 0; transition: opacity 0.5s; }
+    .tagline.show { opacity: 1; }
+
+    .navbar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 70px;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .nav-links { display: flex; gap: 40px; align-items: center; }
+    .navbar a { text-decoration: none; font-weight: 500; color: var(--primary-color); transition: 0.3s; }
+    .navbar a:hover, .navbar a.active { color: var(--secondary-color); }
+
+    .logout-nav {
+      background-color: var(--secondary-color);
+      color: white !important;
+      padding: 8px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+
+    .content { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+    
+    .monitor-card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      transition: 0.3s;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 15px;
+    }
+
+    .item-details h3 { margin: 0; font-size: 1.4rem; color: var(--primary-color); }
+    .item-details p { margin: 5px 0; color: #666; font-size: 0.9rem; }
+    .item-details .description { 
+      margin-top: 8px; 
+      font-style: italic; 
+      color: #888; 
+      font-size: 0.85rem; 
+    }
+
+    .tracker-container { position: relative; padding: 20px 0; }
+    .track-bg { height: 10px; background: #e9ecef; border-radius: 10px; overflow: hidden; }
+    
+    .track-fill {
+      height: 100%;
+      width: 15%;
+      background: var(--accent-color);
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s;
+    }
+
+    .step-markers {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #adb5bd;
+      text-transform: uppercase;
+    }
+
+    .active-step { color: var(--primary-color); }
+
+    .btn-group { display: flex; gap: 10px; }
+
+    .action-btn {
+      padding: 10px 18px;
+      border: 1px solid var(--primary-color);
+      background: transparent;
+      color: var(--primary-color);
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .action-btn.primary { background: var(--primary-color); color: white; }
+    .action-btn:hover { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+    .undo-state { background: var(--warning-bg) !important; color: var(--warning-text) !important; border-color: #ffeeba !important; }
+    .cancel-delivery-btn { border-color: var(--secondary-color); color: var(--secondary-color); }
+    .cancel-delivery-btn:hover { background: var(--secondary-color); color: white; border-color: var(--secondary-color); }
+    .action-btn:disabled { background: #f1f1f1 !important; color: #ccc !important; border-color: #eee !important; cursor: not-allowed; }
+
+    .tab-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .toggle-btn {
+      padding: 10px 25px;
+      border-radius: 30px;
+      border: none;
+      background: #e9ecef;
+      color: #666;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .toggle-btn.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .inline-form {
+      display: none;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px dashed #ddd;
+    }
+    .inline-form.show { display: flex; gap: 10px; align-items: center; }
+    .inline-form input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+    .inline-form button { padding: 10px 15px; border-radius: 8px; background: var(--secondary-color); color: white; border: none; cursor: pointer; }
+
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="profile-chip" id="profileChip">
+      <span id="profileEmail">Profile</span>
+    </div>
+    <div class="profile-dropdown" id="profileDropdown"></div>
+    <h1 class="site-title">Charity Flow</h1>
+    <div class="tagline" id="tagline">Logistics Monitor</div>
+  </div>
+
+  <div class="navbar">
+    <div class="nav-links">
+      <a href="admin.html">Dashboard</a>
+      <a href="item-allocation.html">Inventory</a>
+      <a href="manage-users.html">Directory</a>
+      <a href="dropoff-tracking.html" class="active">Logistics</a>
+      <a href="reports-history.html">Reports</a>
+      <button class="logout-nav" onclick="localStorage.clear(); location.href='login.html'">Logout</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="tab-toggle">
+      <button class="toggle-btn active" id="btnActive" onclick="setTab('active')">Active Shipments</button>
+      <button class="toggle-btn" id="btnCompleted" onclick="setTab('completed')">Completed Deliveries</button>
+    </div>
+    <div id="logisticsContainer">
+      <!-- Dynamic Logistics Rendered Here -->
+    </div>
+  </div>
+
+  <script>
+    // Tagline rotation
+    const taglines = ["Logistics Monitor", "Error-Free Tracking", "Verifying Shipments", "Final Mile Delivery"];
+    let idx = 0;
+    const tagEl = document.getElementById('tagline');
+    function rotate() {
+      tagEl.classList.remove('show');
+      setTimeout(() => {
+        idx = (idx + 1) % taglines.length;
+        tagEl.textContent = taglines[idx];
+        tagEl.classList.add('show');
+      }, 500);
+    }
+    tagEl.classList.add('show');
+    setInterval(rotate, 3000);
+
+    // Session guard
+    const token = localStorage.getItem('charityToken');
+    if (!token) window.location.href = "login.html";
+    else if (localStorage.getItem('userRole') !== "admin") window.location.href = "frontend.html";
+
+    let allEntries = [];
+    let currentTab = 'active';
+
+    function setTab(tab) {
+      currentTab = tab;
+      document.getElementById('btnActive').classList.toggle('active', tab === 'active');
+      document.getElementById('btnCompleted').classList.toggle('active', tab === 'completed');
+      renderLogistics();
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const userEmail = localStorage.getItem("userEmail") || "Admin";
+      document.getElementById("profileEmail").textContent = userEmail;
+      
+      const profileChip = document.getElementById("profileChip");
+      const profileDropdown = document.getElementById("profileDropdown");
+      
+      profileChip.addEventListener("click", (e) => {
+        e.stopPropagation();
+        profileDropdown.classList.toggle("show");
+      });
+      
+      document.addEventListener("click", (e) => {
+        if (!profileChip.contains(e.target) && !profileDropdown.contains(e.target)) {
+          profileDropdown.classList.remove("show");
+        }
+      });
+
+      const container = document.getElementById('logisticsContainer');
+      container.innerHTML = "<p style='text-align:center;'>Loading...</p>";
+      
+      try {
+        // Fetch Profile Activity Dropdown
+        const actRes = await fetch("http://localhost:8000/admin/my-activity", { headers: { 'Authorization': `Bearer ${token}` }});
+        if (actRes.ok) {
+          const acts = await actRes.json();
+          if (acts.length === 0) {
+            profileDropdown.innerHTML = '<div class="dropdown-item">No recent activity</div>';
+          } else {
+            profileDropdown.innerHTML = acts.map(act => `
+              <div class="dropdown-item">
+                <div><strong>${act.action}</strong>: ${act.details}</div>
+                <div class="time">${act.timestamp}</div>
+              </div>
+            `).join('');
+          }
+        }
+
+        const res = await fetch("http://localhost:8000/logistics", {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+          allEntries = await res.json();
+          renderLogistics();
+        } else if (res.status === 401) {
+          localStorage.clear();
+          window.location.href = "login.html";
+        } else {
+          container.innerHTML = "<p style='text-align:center; color:red;'>Failed to load logistics data.</p>";
+        }
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = "<p style='text-align:center; color:red;'>Failed to connect to server.</p>";
+      }
+    });
+
+    function renderLogistics() {
+      const container = document.getElementById('logisticsContainer');
+      container.innerHTML = "";
+      
+      const filtered = allEntries.filter(e => {
+        if (currentTab === 'active') return e.stage === 'picked_up' || e.stage === 'at_hub';
+        return e.stage === 'delivered';
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p style='text-align:center; color:#666;'>No ${currentTab} shipments at the moment.</p>`;
+        return;
+      }
+
+      filtered.forEach(e => {
+        const isHub = e.stage === 'at_hub';
+        const isDeliv = e.stage === 'delivered';
+        const fillWidth = isDeliv ? '100%' : isHub ? '50%' : '15%';
+
+        const card = document.createElement('div');
+        card.className = 'monitor-card';
+        card.id = `card-${e.donation_id}`;
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="item-details">
+              <h3>${e.category || 'Donation Item'}</h3>
+              <p><strong>Donor:</strong> ${e.donor_email || 'N/A'} | <strong>NGO:</strong> ${e.ngo_name || e.assigned_ngo || 'N/A'}</p>
+              <p><strong>Drop-off Location:</strong> ${e.location || 'N/A'}</p>
+              ${e.description ? `<p class="description">"${e.description}"</p>` : ''}
+            </div>
+            <div class="btn-group">
+              <button 
+                class="action-btn ${isHub ? 'undo-state' : ''}" 
+                id="hub-${e.donation_id}" 
+                onclick="toggleHub('${e.donation_id}')"
+                style="display: ${isDeliv ? 'none' : 'block'}">
+                ${isHub ? "Undo Hub" : "Mark at Hub"}
+              </button>
+              <button 
+                class="action-btn primary" 
+                id="del-${e.donation_id}" 
+                onclick="updateStatus('${e.donation_id}', 'delivered')"
+                ${isDeliv || !isHub ? 'disabled' : ''}
+                style="display: ${isDeliv ? 'none' : 'block'}">
+                Confirm Delivery
+              </button>
+              ${isDeliv ? `
+              <button class="action-btn cancel-delivery-btn" onclick="document.getElementById('cancel-form-${e.donation_id}').classList.toggle('show')">
+                Cancel Delivery
+              </button>
+              ` : ''}
+            </div>
+          </div>
+
+          <div class="tracker-container">
+            <div class="track-bg">
+              <div class="track-fill" id="fill-${e.donation_id}" style="width: ${fillWidth}; ${isDeliv ? 'background: var(--success-color);' : ''}"></div>
+            </div>
+            <div class="step-markers">
+              <span class="active-step">Donor Picked Up</span>
+              <span id="step-${e.donation_id}-2" class="${isHub || isDeliv ? 'active-step' : ''}">At Sorting Hub</span>
+              <span id="step-${e.donation_id}-3" class="${isDeliv ? 'active-step' : ''}">NGO Received</span>
+            </div>
+          </div>
+          
+          <div class="inline-form" id="cancel-form-${e.donation_id}">
+            <input type="text" id="cancel-reason-${e.donation_id}" placeholder="Reason for cancellation..." />
+            <button onclick="cancelDelivery('${e.donation_id}')">Confirm Cancel</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function toggleHub(id) {
+      const entry = allEntries.find(e => e.donation_id === id);
+      if (!entry) return;
+      
+      const newStage = entry.stage === 'at_hub' ? 'undo_hub' : 'at_hub';
+      
+      try {
+        const res = await fetch(`http://localhost:8000/logistics/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ stage: newStage })
+        });
+        
+        if (res.ok) {
+          entry.stage = newStage === 'undo_hub' ? 'picked_up' : 'at_hub';
+          renderLogistics();
+        } else {
+          const result = await res.json().catch(() => ({}));
+          alert(result.detail || "Failed to update stage.");
+        }
+      } catch (err) {
+        alert("Failed to connect to server.");
+      }
+    }
+
+    async function updateStatus(id, stage) {
+      if (stage === 'delivered' && !confirm("Confirm this delivery? This will finalize the logistics record.")) return;
+
+      try {
+        const res = await fetch(`http://localhost:8000/logistics/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ stage })
+        });
+
+        if (res.ok) {
+          const entry = allEntries.find(e => e.donation_id === id);
+          if(entry) entry.stage = stage;
+          renderLogistics();
+        } else if (res.status === 401) {
+          localStorage.clear();
+          window.location.href = "login.html";
+        } else {
+          const result = await res.json().catch(() => ({}));
+          alert(result.detail || "Failed to update status.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Failed to connect to server.");
+      }
+    }
+    
+    async function cancelDelivery(id) {
+      const reasonInput = document.getElementById(`cancel-reason-${id}`);
+      const reason = reasonInput.value.trim();
+      if(!reason) {
+        alert("Please provide a reason.");
+        return;
+      }
+      
+      try {
+        const res = await fetch(`http://localhost:8000/logistics/${id}/cancel-delivery`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ reason })
+        });
+        
+        if (res.ok) {
+          const entry = allEntries.find(e => e.donation_id === id);
+          if(entry) entry.stage = 'picked_up';
+          setTab('active');
+        } else {
+          const result = await res.json().catch(() => ({}));
+          alert(result.detail || "Failed to cancel delivery.");
+        }
+      } catch(err) {
+        alert("Failed to connect to server.");
+      }
+    }
+  </script>
+</body>
+</html>

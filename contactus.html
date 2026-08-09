@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contact Us | Charity Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #1d3557;
+      --secondary-color: #e63946;
+      --accent-color: #457b9d;
+      --bg-color: #f5f7fa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--primary-color);
+    }
+
+    .hero {
+      height: 35vh;
+      background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+        url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1950&q=80') center/cover no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      position: relative;
+    }
+
+    .profile-chip {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      backdrop-filter: blur(5px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-chip:hover { background: rgba(255,255,255,0.25); }
+
+    .site-title {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .tagline {
+      font-size: 1.2rem;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      min-height: 1.5em;
+    }
+
+    .tagline.show { opacity: 1; }
+
+    .navbar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      padding: 0 1rem;
+      height: 70px;
+      background-color: white;
+      border-bottom: 1px solid #ddd;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .navbar a {
+      text-decoration: none;
+      font-weight: 500;
+      color: var(--primary-color);
+      transition: color 0.3s;
+    }
+
+    .navbar a:hover, .navbar a.active { color: var(--secondary-color); }
+
+    .logout-btn {
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .contact-container {
+      max-width: 1000px;
+      margin: 3rem auto;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+    }
+
+    .contact-info h2 {
+      color: var(--accent-color);
+      margin-bottom: 1.5rem;
+    }
+
+    .info-item {
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .info-item strong {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      color: #777;
+    }
+
+    .info-item a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .info-item a:hover {
+      color: var(--accent-color);
+      text-decoration: underline;
+    }
+
+    .subscribe {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .subscribe h3 {
+      margin-top: 0;
+      color: var(--primary-color);
+      margin-bottom: 1.5rem;
+    }
+
+    input[type="text"], input[type="email"], textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 1rem;
+      border: 1.5px solid #d1d9e6;
+      border-radius: 8px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    input[type="email"][readonly] {
+      background: #f8f9fa;
+      color: #888;
+      cursor: not-allowed;
+    }
+
+    input:focus, textarea:focus { border-color: var(--accent-color); }
+
+    .subscribe-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .subscribe-btn:hover { background-color: var(--primary-color); }
+
+    @media (max-width: 768px) {
+      .contact-container { grid-template-columns: 1fr; }
+      .navbar { gap: 1rem; font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="profile-chip" id="profileChip" onclick="window.location.href='myaccount.html'" title="View My Account">
+      <span id="profileEmail">Profile</span> &rarr;
+    </div>
+    <div class="site-header">
+      <h1 class="site-title">Charity Flow</h1>
+      <div class="tagline" id="tagline">We'd love to hear from you!</div>
+    </div>
+  </div>
+
+  <nav class="navbar">
+    <a href="frontend.html">Home</a>
+    <a href="donate.html">Donate</a>
+    <a href="contactus.html" class="active">Contact Us</a>
+    <a href="ourservices.html">Our Services</a>
+    <a href="aboutus.html">About Us</a>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
+  </nav>
+
+  <div class="contact-container">
+    <div class="contact-info">
+      <h2>Get In Touch</h2>
+      <p>Have questions about a donation or want to partner with us? Our team is here to help.</p>
+
+      <div class="info-item">
+        <strong>Email</strong>
+        <a href="mailto:support@charityflow.org">support@charityflow.org</a>
+      </div>
+
+      <div class="info-item" style="margin-top: 2rem;">
+        <p style="color: #666; font-size: 0.95rem; line-height: 1.6;">
+          You can also reach us directly by filling out the form. We typically respond within 24 hours.
+        </p>
+      </div>
+    </div>
+
+    <div class="subscribe">
+      <h3>Send us a Message</h3>
+      <form id="contactForm">
+        <input type="text" id="contactName" placeholder="Full Name" required>
+        <input type="email" id="contactEmail" placeholder="Email Address" required readonly>
+        <textarea id="contactMessage" rows="4" placeholder="How can we help you?" required></textarea>
+        <button type="submit" class="subscribe-btn">Send Message</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("charityToken");
+    if (!token) window.location.href = "login.html";
+
+    // Pre-fill email from logged in user and lock it
+    document.getElementById("contactEmail").value = localStorage.getItem("userEmail") || "";
+    document.getElementById("profileEmail").textContent = localStorage.getItem("userEmail") || "Profile";
+
+    // Tagline Rotation
+    const taglines = [
+      "We'd love to hear from you!",
+      "Bringing kindness to every corner.",
+      "Every question matters.",
+      "Together we make a difference."
+    ];
+    let index = 0;
+    const taglineElement = document.getElementById('tagline');
+
+    function rotateTagline() {
+      taglineElement.classList.remove('show');
+      setTimeout(() => {
+        index = (index + 1) % taglines.length;
+        taglineElement.textContent = taglines[index];
+        taglineElement.classList.add('show');
+      }, 500);
+    }
+    taglineElement.classList.add('show');
+    setInterval(rotateTagline, 4000);
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.clear();
+      window.location.href = "login.html";
+    });
+
+    // Form Submission
+    document.getElementById('contactForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const name = document.getElementById('contactName').value;
+      const email = document.getElementById('contactEmail').value;
+      const message = document.getElementById('contactMessage').value;
+
+      try {
+        const btn = document.querySelector('.subscribe-btn');
+        const origText = btn.textContent;
+        btn.textContent = "Sending...";
+
+        const response = await fetch("http://localhost:8000/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, message })
+        });
+
+        btn.textContent = origText;
+
+        if (response.ok) {
+          alert("Thank you for reaching out! We will get back to you shortly.");
+          document.getElementById('contactName').value = "";
+          document.getElementById('contactMessage').value = "";
+        } else if (response.status === 401) {
+          localStorage.clear();
+          window.location.href = "login.html";
+        } else {
+          const result = await response.json().catch(() => ({}));
+          alert(result.detail || "Something went wrong. Please try again.");
+        }
+      } catch (err) {
+        document.querySelector('.subscribe-btn').textContent = "Send Message";
+        alert("Something went wrong. Please try again.");
+      }
+    });
+  </script>
+</body>
+</html>

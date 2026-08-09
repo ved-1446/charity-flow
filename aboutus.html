@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About Us | Charity Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #1d3557;
+      --secondary-color: #e63946;
+      --accent-color: #457b9d;
+      --bg-color: #f8f9fa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--primary-color);
+      line-height: 1.6;
+    }
+
+    /* Hero Section */
+    .hero {
+      height: 40vh;
+      background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+        url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1950&q=80') center/cover no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      position: relative;
+    }
+
+    .profile-chip {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      backdrop-filter: blur(5px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-chip:hover { background: rgba(255,255,255,0.25); }
+    .profile-dropdown {
+      position: absolute;
+      top: 50px;
+      right: 20px;
+      background: white;
+      color: var(--primary-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 250px;
+      display: none;
+      flex-direction: column;
+      text-align: left;
+      z-index: 2000;
+      overflow: hidden;
+    }
+    .profile-dropdown.show { display: flex; }
+    .dropdown-item {
+      padding: 10px 15px;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #eee;
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item .time { color: #888; font-size: 0.7rem; margin-top: 4px; }
+
+    .site-title {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .tagline {
+      font-size: 1.2rem;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      min-height: 1.5em;
+    }
+
+    .tagline.show { opacity: 1; }
+
+    /* Sticky Navbar */
+    .navbar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      padding: 0 1rem;
+      height: 70px;
+      background-color: white;
+      border-bottom: 1px solid #ddd;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .navbar a {
+      text-decoration: none;
+      font-weight: 500;
+      color: var(--primary-color);
+      transition: color 0.3s;
+    }
+
+    .navbar a:hover, .navbar a.active { color: var(--secondary-color); }
+
+    .logout-btn {
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Content Layout */
+    .content-wrapper {
+      max-width: 1100px;
+      margin: 4rem auto;
+      padding: 0 2rem;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      margin-bottom: 5rem;
+    }
+
+    .text-block h2 {
+      color: var(--secondary-color);
+      font-size: 2.2rem;
+      margin-top: 0;
+    }
+
+    /* Core Values Cards */
+    .values-section {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .value-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      transition: transform 0.3s;
+    }
+
+    .value-card:hover { transform: translateY(-10px); }
+
+    .value-card h3 { color: var(--accent-color); margin-bottom: 1rem; }
+
+    .footer-action {
+      text-align: center;
+      background-color: var(--primary-color);
+      color: white;
+      padding: 4rem 2rem;
+      border-radius: 20px;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      margin-top: 1.5rem;
+      background-color: var(--secondary-color);
+      color: white;
+      text-decoration: none;
+      padding: 1rem 2.5rem;
+      border-radius: 50px;
+      font-weight: 700;
+      transition: background 0.3s;
+    }
+
+    .cta-btn:hover { background-color: #d62839; }
+
+    @media (max-width: 850px) {
+      .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .site-title { font-size: 2.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="profile-chip" id="profileChip" onclick="window.location.href='myaccount.html'" title="View My Account">
+      <span id="profileEmail">Profile</span> &rarr;
+    </div>
+    <div class="site-header">
+      <h1 class="site-title">Charity Flow</h1>
+      <div class="tagline" id="tagline">Our mission, vision and story.</div>
+    </div>
+  </div>
+
+  <nav class="navbar">
+    <a href="frontend.html">Home</a>
+    <a href="donate.html">Donate</a>
+    <a href="contactus.html">Contact Us</a>
+    <a href="ourservices.html">Our Services</a>
+    <a href="aboutus.html" class="active">About Us</a>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
+  </nav>
+
+  <div class="content-wrapper">
+    <section class="about-grid">
+      <div class="text-block">
+        <h2>Who We Are</h2>
+        <p>Charity Flow is a digital bridge built to connect kind-hearted donors with grassroots initiatives that need them most. We believe that technology should be used to make giving simple, transparent, and direct.</p>
+        <p>What started as a small volunteer project has grown into a global network, ensuring that excess resources reach the hands of those in underprivileged communities efficiently.</p>
+      </div>
+      <div class="text-block">
+        <h2>Our Vision</h2>
+        <p>We envision a world where geography and status are no longer barriers to essential support. From clean water and education to emergency healthcare, we strive for a future built on unity and generosity.</p>
+      </div>
+    </section>
+
+    <section class="values-section">
+      <h2>Why Choose Charity Flow?</h2>
+      <div class="values-grid">
+        <div class="value-card">
+          <h3>Full Transparency</h3>
+          <p>Track your donation from the moment you list it until it is received by the beneficiary.</p>
+        </div>
+        <div class="value-card">
+          <h3>Verified Impact</h3>
+          <p>We partner exclusively with verified NGOs to ensure your contributions make a real difference.</p>
+        </div>
+        <div class="value-card">
+          <h3>Simple Logistics</h3>
+          <p>Our smart allocation system handles the heavy lifting, making the donation process effortless.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="footer-action">
+      <h2>Be Part of the Story</h2>
+      <p>Your small act of kindness can start a flow of change. Join our community of donors today.</p>
+      <a href="donate.html" class="cta-btn">Start Donating</a>
+    </section>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("charityToken");
+    if (!token) window.location.href = "login.html";
+
+    window.onload = async () => {
+      const userEmail = localStorage.getItem("userEmail") || "User";
+      document.getElementById("profileEmail").textContent = userEmail;
+    };
+    // 1. Tagline Rotation
+    const taglines = [
+      "Our mission, vision and story.",
+      "Bringing kindness to every corner.",
+      "Be the change you want to see.",
+      "Together we make a difference."
+    ];
+    let index = 0;
+    const taglineElement = document.getElementById('tagline');
+
+    function rotateTagline() {
+      taglineElement.classList.remove('show');
+      setTimeout(() => {
+        index = (index + 1) % taglines.length;
+        taglineElement.textContent = taglines[index];
+        taglineElement.classList.add('show');
+      }, 500);
+    }
+    taglineElement.classList.add('show');
+    setInterval(rotateTagline, 4000);
+
+    // 2. Logout Logic
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.clear();
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>

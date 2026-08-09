@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Donate Items | Charity Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #1d3557;
+      --secondary-color: #e63946;
+      --accent-color: #457b9d;
+      --bg-color: #f5f7fa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--primary-color);
+    }
+
+    /* Hero Section */
+    .hero {
+      height: 35vh;
+      background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+        url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1950&q=80') center/cover no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      position: relative;
+    }
+
+    .profile-chip {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      backdrop-filter: blur(5px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-chip:hover { background: rgba(255,255,255,0.25); }
+    .profile-dropdown {
+      position: absolute;
+      top: 50px;
+      right: 20px;
+      background: white;
+      color: var(--primary-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 250px;
+      display: none;
+      flex-direction: column;
+      text-align: left;
+      z-index: 2000;
+      overflow: hidden;
+    }
+    .profile-dropdown.show { display: flex; }
+    .dropdown-item {
+      padding: 10px 15px;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #eee;
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item .time { color: #888; font-size: 0.7rem; margin-top: 4px; }
+
+    .site-title {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .tagline {
+      font-size: 1.2rem;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    .tagline.show { opacity: 1; }
+
+    /* Navbar */
+    .navbar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      padding: 0 1rem;
+      height: 70px;
+      background-color: white;
+      border-bottom: 1px solid #ddd;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .navbar a {
+      text-decoration: none;
+      font-weight: 500;
+      color: var(--primary-color);
+    }
+
+    .navbar a:hover, .navbar a.active { color: var(--secondary-color); }
+
+    .logout-btn {
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Form Styles */
+    .content {
+      padding: 3rem 5%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .main-content {
+      max-width: 600px;
+      width: 100%;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      padding: 2.5rem;
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--accent-color);
+      text-align: center;
+    }
+
+    .form-group { margin-bottom: 1.5rem; }
+
+    .form-group label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    select, textarea, input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px solid #d1d9e6;
+      border-radius: 8px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    select:focus, textarea:focus { border-color: var(--accent-color); }
+
+    /* Improved Dropzone */
+    .dropzone {
+      border: 2px dashed #a8dadc;
+      padding: 30px;
+      text-align: center;
+      color: #555;
+      cursor: pointer;
+      border-radius: 10px;
+      background: #f8fbff;
+      transition: all 0.3s;
+    }
+
+    .dropzone:hover {
+      background: #eef7f9;
+      border-color: var(--accent-color);
+    }
+
+    #file-list {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: var(--accent-color);
+    }
+
+    .submit-button {
+      width: 100%;
+      padding: 15px;
+      background-color: var(--accent-color);
+      color: white;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: background 0.3s;
+    }
+
+    .submit-button:hover { background: var(--primary-color); }
+
+    .cta {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 1rem;
+      color: #666;
+    }
+
+    @media (max-width: 600px) {
+      .main-content { padding: 1.5rem; }
+      .navbar { gap: 1rem; font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="profile-chip" id="profileChip" onclick="window.location.href='myaccount.html'" title="View My Account">
+      <span id="profileEmail">Profile</span> &rarr;
+    </div>
+    <div class="site-header">
+      <h1 class="site-title">Charity Flow</h1>
+      <div class="tagline" id="tagline">Bringing kindness to every corner.</div>
+    </div>
+  </div>
+
+  <nav class="navbar">
+    <a href="frontend.html">Home</a>
+    <a href="donate.html" class="active">Donate</a>
+    <a href="contactus.html">Contact Us</a>
+    <a href="ourservices.html">Our Services</a>
+    <a href="aboutus.html">About Us</a>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
+  </nav>
+
+  <div class="content">
+    <div class="main-content">
+      <h2 class="section-title">Donate Your Items</h2>
+      
+      <form id="donationForm">
+        <div class="form-group">
+          <label for="location">Select Drop-off Location</label>
+          <select id="location" required>
+            <option value="">Choose a location</option>
+            <option>Mumbai Central</option>
+            <option>Delhi Connaught Place</option>
+            <option>Bangalore MG Road</option>
+            <option>Pune Camp</option>
+            <option>Hyderabad Banjara Hills</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Choose Item Category</label>
+          <select id="category" required>
+            <option value="">Select a category</option>
+            <option>Books</option>
+            <option>Clothes</option>
+            <option>Utensils</option>
+            <option>Toys</option>
+            <option>Electronics</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Upload Photos</label>
+          <div class="dropzone" id="dropzone">
+            <p>Click or drag photos here to upload</p>
+            <div id="file-list">No files selected</div>
+          </div>
+          <input type="file" id="photos" name="donationImage" accept="image/*" multiple style="display:none;">
+        </div>
+
+        <div class="form-group">
+          <label for="description">Short Description</label>
+          <textarea id="description" rows="3" placeholder="Condition of the item, quantity, etc."></textarea>
+        </div>
+
+        <button type="submit" class="submit-button">Submit Donation Request</button>
+      </form>
+
+      <div class="cta">
+        <strong>Thank you for your generosity!</strong><br>
+        Your request will be reviewed by our admin team shortly.
+      </div>
+    </div>
+  </div>
+
+<script>
+  const token = localStorage.getItem("charityToken");
+  if (!token) window.location.href = "login.html";
+
+  window.onload = async () => {
+    const userEmail = localStorage.getItem("userEmail") || "User";
+    document.getElementById("profileEmail").textContent = userEmail;
+  };
+
+  // 1. Tagline Rotation
+  const taglines = [
+    "Bringing kindness to every corner.",
+    "Be the change you want to see.",
+    "Every small help counts.",
+    "Together we make a difference."
+  ];
+  let index = 0;
+  const taglineElement = document.getElementById('tagline');
+
+  function rotateTagline() {
+    taglineElement.classList.remove('show');
+    setTimeout(() => {
+      index = (index + 1) % taglines.length;
+      taglineElement.textContent = taglines[index];
+      taglineElement.classList.add('show');
+    }, 500);
+  }
+  taglineElement.classList.add('show');
+  setInterval(rotateTagline, 4000);
+
+  // 2. File Selection UI Logic
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('photos');
+  const fileList = document.getElementById('file-list');
+
+  dropzone.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', () => {
+    const files = fileInput.files;
+    if (files.length > 0) {
+      fileList.textContent = `${files.length} file(s) selected: ` + 
+        Array.from(files).map(f => f.name).join(', ');
+    } else {
+      fileList.textContent = "No files selected";
+    }
+  });
+
+  // 3. Logout Logic
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.clear();
+    window.location.href = "login.html";
+  });
+
+  // 4. Form Submission
+  document.getElementById('donationForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append('location', document.getElementById('location').value);
+    formData.append('category', document.getElementById('category').value);
+    formData.append('description', document.getElementById('description').value);
+    formData.append('donorEmail', localStorage.getItem('userEmail'));
+
+    const files = fileInput.files;
+    for (let i = 0; i < files.length; i++) {
+      formData.append('photos', files[i]);
+    }
+
+    try {
+      const btn = document.querySelector('.submit-button');
+      const origText = btn.textContent;
+      btn.textContent = "Loading...";
+
+      const response = await fetch('http://localhost:8000/donate', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      btn.textContent = origText;
+
+      if (response.ok) {
+        alert('Donation request submitted successfully! Our admin team will review it shortly.');
+        this.reset();
+        fileList.textContent = "No files selected";
+      } else if (response.status === 401) {
+        localStorage.clear();
+        window.location.href = "login.html";
+      } else {
+        const result = await response.json().catch(() => ({}));
+        alert('Error: ' + (result.detail || response.statusText));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred while connecting to the server.');
+      document.querySelector('.submit-button').textContent = "Submit Donation Request";
+    }
+  });
+</script>
+
+</body>
+</html>

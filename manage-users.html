@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>System Directory | Charity Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #1d3557;
+      --secondary-color: #e63946;
+      --accent-color: #457b9d;
+      --success-color: #2a9d8f;
+      --warning-color: #ffb703;
+      --light-bg: #f4f7f6;
+    }
+
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--light-bg);
+      color: var(--primary-color);
+    }
+
+    /* HERO SECTION */
+    .hero {
+      height: 35vh;
+      background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+        url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1950&q=80') center/cover no-repeat;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      position: relative;
+    }
+
+    .profile-chip {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      backdrop-filter: blur(5px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-chip:hover { background: rgba(255,255,255,0.25); }
+    .profile-dropdown {
+      position: absolute;
+      top: 50px;
+      right: 20px;
+      background: white;
+      color: var(--primary-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 250px;
+      display: none;
+      flex-direction: column;
+      text-align: left;
+      z-index: 2000;
+      overflow: hidden;
+    }
+    .profile-dropdown.show { display: flex; }
+    .dropdown-item {
+      padding: 10px 15px;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #eee;
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item .time { color: #888; font-size: 0.7rem; margin-top: 4px; }
+
+    .site-title { font-size: 3.5rem; font-weight: 600; margin: 0; }
+    .tagline { font-size: 1.1rem; font-weight: 400; min-height: 1.5em; opacity: 0; transition: opacity 0.5s; }
+    .tagline.show { opacity: 1; }
+
+    /* MASTER NAVBAR */
+    .navbar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 70px;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .nav-links { display: flex; gap: 30px; align-items: center; }
+    .navbar a { text-decoration: none; font-weight: 400; color: var(--primary-color); transition: 0.3s; font-size: 0.95rem; }
+    .navbar a:hover, .navbar a.active { color: var(--secondary-color); }
+
+    .logout-nav {
+      background-color: var(--secondary-color);
+      color: white !important;
+      font-weight: 600;
+      padding: 8px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+
+    /* TAB SYSTEM */
+    .content { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+    
+    .tab-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .tab-btn {
+      padding: 12px 30px;
+      border: none;
+      background: white;
+      color: var(--primary-color);
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: 0.3s;
+    }
+
+    .tab-btn.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    /* TABLES */
+    .directory-table {
+      width: 100%;
+      background: white;
+      border-collapse: collapse;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      display: none; /* Toggle handled by JS */
+    }
+
+    .directory-table.active { display: table; }
+
+    th { background: #f8f9fa; color: var(--primary-color); font-weight: 600; text-align: left; padding: 15px; border-bottom: 2px solid #eee; }
+    td { padding: 15px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    
+    .directory-table tbody tr:nth-child(even) {
+      background-color: #fcfcfc;
+    }
+
+    /* STATUS BADGES */
+    .badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      display: inline-block;
+    }
+    .active-badge { background: #d1e7dd; color: #0f5132; }
+    .pending-badge { background: #fff3cd; color: #856404; }
+    .inactive-badge { background: #f8d7da; color: #721c24; }
+    
+    /* New Activity Badges */
+    .badge-allocation { background: #d1e7dd; color: #0f5132; }
+    .badge-rejection { background: #f8d7da; color: #721c24; }
+    .badge-donation { background: #cfe2ff; color: #084298; }
+    .badge-delivery_cancelled { background: #ffe5d0; color: #854000; }
+    .badge-contact_replied { background: #e8d5f5; color: #4e1d7a; }
+    .badge-contact_flagged { background: #fff3cd; color: #856404; }
+    .badge-default { background: #e9ecef; color: #495057; }
+
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="profile-chip" id="profileChip">
+      <span id="profileEmail">Profile</span>
+    </div>
+    <div class="profile-dropdown" id="profileDropdown"></div>
+    <h1 class="site-title">Charity Flow</h1>
+    <div class="tagline" id="tagline">System Directory</div>
+  </div>
+
+  <div class="navbar">
+    <div class="nav-links">
+      <a href="admin.html">Dashboard</a>
+      <a href="item-allocation.html">Inventory</a>
+      <a href="manage-users.html" class="active">Directory</a>
+      <a href="dropoff-tracking.html">Logistics</a>
+      <a href="reports-history.html">Reports</a>
+      <button class="logout-nav" onclick="location.href='login.html'">Logout</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="tab-container">
+      <button class="tab-btn active" onclick="switchTab('users', this)">User Database</button>
+      <button class="tab-btn" onclick="switchTab('ngos', this)">NGO Requests</button>
+      <button class="tab-btn" onclick="switchTab('activity', this)">Admin Activity</button>
+    </div>
+
+    <table class="directory-table active" id="usersTable">
+      <thead>
+        <tr>
+          <th>Email Address</th>
+          <th>Role</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="usersBody">
+      </tbody>
+    </table>
+
+    <table class="directory-table" id="ngosTable">
+      <thead>
+        <tr>
+          <th>NGO Name</th>
+          <th>Requested Items</th>
+          <th>Reason / Project</th>
+        </tr>
+      </thead>
+      <tbody id="ngosBody">
+      </tbody>
+    </table>
+
+    <table class="directory-table" id="activityTable">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Admin Email</th>
+          <th>Action</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody id="activityBody">
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const taglines = ["Manage Users", "Review NGO Needs", "Maintain Integrity", "Account Oversight"];
+    let index = 0;
+    const taglineElement = document.getElementById('tagline');
+    function rotateTagline() {
+      taglineElement.classList.remove('show');
+      setTimeout(() => {
+        index = (index + 1) % taglines.length;
+        taglineElement.textContent = taglines[index];
+        taglineElement.classList.add('show');
+      }, 500);
+    }
+    taglineElement.classList.add('show');
+    setInterval(rotateTagline, 3000);
+
+    function switchTab(type, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('usersTable').classList.remove('active');
+      document.getElementById('ngosTable').classList.remove('active');
+      document.getElementById('activityTable').classList.remove('active');
+      if(type === 'users') document.getElementById('usersTable').classList.add('active');
+      else if(type === 'ngos') document.getElementById('ngosTable').classList.add('active');
+      else document.getElementById('activityTable').classList.add('active');
+    }
+
+    const token = localStorage.getItem('charityToken');
+    if (!token) window.location.href = "login.html";
+    else if (localStorage.getItem('userRole') !== "admin") window.location.href = "frontend.html";
+
+    function getBadgeClass(action) {
+      const mapping = {
+        'allocation': 'badge-allocation',
+        'rejection': 'badge-rejection',
+        'donation': 'badge-donation',
+        'delivery_cancelled': 'badge-delivery_cancelled',
+        'contact_replied': 'badge-contact_replied',
+        'contact_flagged': 'badge-contact_flagged'
+      };
+      return mapping[action] || 'badge-default';
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const userEmail = localStorage.getItem("userEmail") || "Admin";
+      document.getElementById("profileEmail").textContent = userEmail;
+      
+      const profileChip = document.getElementById("profileChip");
+      const profileDropdown = document.getElementById("profileDropdown");
+      
+      profileChip.addEventListener("click", (e) => {
+        e.stopPropagation();
+        profileDropdown.classList.toggle("show");
+      });
+      
+      document.addEventListener("click", (e) => {
+        if (!profileChip.contains(e.target) && !profileDropdown.contains(e.target)) {
+          profileDropdown.classList.remove("show");
+        }
+      });
+
+      document.getElementById('usersBody').innerHTML = "<tr><td colspan='3' style='text-align:center;'>Loading...</td></tr>";
+      document.getElementById('ngosBody').innerHTML = "<tr><td colspan='3' style='text-align:center;'>Loading...</td></tr>";
+      document.getElementById('activityBody').innerHTML = "<tr><td colspan='4' style='text-align:center;'>Loading...</td></tr>";
+      
+      try {
+        // Fetch Profile Activity Dropdown
+        const actRes = await fetch("http://localhost:8000/admin/my-activity", { headers: { 'Authorization': `Bearer ${token}` }});
+        if (actRes.ok) {
+          const acts = await actRes.json();
+          if (acts.length === 0) {
+            profileDropdown.innerHTML = '<div class="dropdown-item">No recent activity</div>';
+          } else {
+            profileDropdown.innerHTML = acts.map(act => `
+              <div class="dropdown-item">
+                <div><strong>${act.action}</strong>: ${act.details}</div>
+                <div class="time">${act.timestamp}</div>
+              </div>
+            `).join('');
+          }
+        }
+
+        const usersRes = await fetch("http://localhost:8000/admin/users", { headers: {'Authorization': `Bearer ${token}`}});
+        if(usersRes.ok) {
+          const users = await usersRes.json();
+          document.getElementById('usersBody').innerHTML = users.map(u => `<tr><td>${u.email}</td><td style="text-transform:capitalize;">${u.role}</td><td><span class="badge ${u.status==='active'?'active-badge':u.status==='pending'?'pending-badge':'inactive-badge'}">${u.status}</span></td></tr>`).join('');
+        } else if (usersRes.status === 401) {
+          localStorage.clear(); window.location.href = "login.html"; return;
+        } else {
+          document.getElementById('usersBody').innerHTML = "<tr><td colspan='3' style='text-align:center;'>Failed to load data</td></tr>";
+        }
+
+        const ngosRes = await fetch("http://localhost:8000/admin/ngos", { headers: {'Authorization': `Bearer ${token}`}});
+        if(ngosRes.ok) {
+          const ngos = await ngosRes.json();
+          document.getElementById('ngosBody').innerHTML = ngos.map(n => `<tr><td>${n.name}</td><td>${n.requested_items.join(', ')}</td><td>${n.reason}</td></tr>`).join('');
+        } else if (ngosRes.status === 401) {
+          localStorage.clear(); window.location.href = "login.html"; return;
+        } else {
+          document.getElementById('ngosBody').innerHTML = "<tr><td colspan='3' style='text-align:center;'>Failed to load data</td></tr>";
+        }
+
+        const allActRes = await fetch("http://localhost:8000/admin/all-activity", { headers: {'Authorization': `Bearer ${token}`}});
+        if(allActRes.ok) {
+          const allActs = await allActRes.json();
+          document.getElementById('activityBody').innerHTML = allActs.map(a => `
+            <tr>
+              <td>${a.timestamp}</td>
+              <td>${a.user_email}</td>
+              <td><span class="badge ${getBadgeClass(a.action)}">${a.action.replace('_', ' ')}</span></td>
+              <td>${a.details}</td>
+            </tr>
+          `).join('');
+        } else {
+          document.getElementById('activityBody').innerHTML = "<tr><td colspan='4' style='text-align:center;'>Failed to load data</td></tr>";
+        }
+
+      } catch (err) { 
+        console.error(err); 
+        document.getElementById('usersBody').innerHTML = "<tr><td colspan='3' style='text-align:center;'>Failed to load data</td></tr>";
+        document.getElementById('ngosBody').innerHTML = "<tr><td colspan='3' style='text-align:center;'>Failed to load data</td></tr>";
+        document.getElementById('activityBody').innerHTML = "<tr><td colspan='4' style='text-align:center;'>Failed to load data</td></tr>";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Home | Charity Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="assets/js/config.js"></script> 
+  <style>
+    :root {
+      --primary-color: #1d3557;
+      --secondary-color: #e63946;
+      --bg-color: #ffffff;
+      --light-gray: #f1f1f1;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--primary-color);
+    }
+
+    /* Hero Section */
+    .hero {
+      height: 35vh;
+      background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+        url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1950&q=80') center/cover no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5%;
+      color: white;
+      text-align: center;
+      position: relative;
+    }
+
+    .profile-chip {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      backdrop-filter: blur(5px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-chip:hover { background: rgba(255,255,255,0.25); }
+    .profile-dropdown {
+      position: absolute;
+      top: 50px;
+      right: 20px;
+      background: white;
+      color: var(--primary-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 250px;
+      display: none;
+      flex-direction: column;
+      text-align: left;
+      z-index: 2000;
+      overflow: hidden;
+    }
+    .profile-dropdown.show { display: flex; }
+    .dropdown-item {
+      padding: 10px 15px;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #eee;
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item .time { color: #888; font-size: 0.7rem; margin-top: 4px; }
+
+    .site-header {
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .site-title {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .tagline {
+      font-size: 1.2rem;
+      font-weight: 400;
+      margin-top: 10px;
+      height: 1.5rem;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    .tagline.show {
+      opacity: 1;
+    }
+
+    /* Navbar Redesign */
+    .navbar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      padding: 0 1rem;
+      height: 70px;
+      background-color: white;
+      border-bottom: 1px solid #ddd;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .navbar a {
+      text-decoration: none;
+      font-weight: 500;
+      color: var(--primary-color);
+      transition: color 0.3s;
+    }
+
+    .navbar a:hover, .navbar a.active {
+      color: var(--secondary-color);
+    }
+
+    .logout-btn {
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      transition: transform 0.2s;
+    }
+
+    .logout-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* Main Content */
+    .content-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      padding: 3rem 5%;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .main-content {
+      flex: 1 1 65%;
+      margin-bottom: 2rem;
+    }
+
+    .section-intro h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .banners {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .banner {
+      text-align: center;
+      padding: 1.5rem;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      transition: box-shadow 0.3s;
+    }
+
+    .banner:hover {
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
+
+    .banner img {
+      width: 60px;
+      margin-bottom: 1rem;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      flex: 1 1 25%;
+      padding: 2rem;
+      background-color: var(--light-gray);
+      border-radius: 15px;
+      align-self: flex-start;
+    }
+
+    .ad-card {
+      background-color: white;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .ad-card h4 { margin-top: 0; }
+
+    .ad-card button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.5rem;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-weight: 600;
+    }
+
+    @media (max-width: 900px) {
+      .content-wrapper { flex-direction: column; }
+      .main-content, .sidebar { flex: 1 1 100%; }
+      .navbar { gap: 1rem; font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="profile-chip" id="profileChip" onclick="window.location.href='myaccount.html'" title="View My Account">
+      <span id="profileEmail">Profile</span> &rarr;
+    </div>
+    <div class="site-header">
+      <h1 class="site-title">Charity Flow</h1>
+      <div class="tagline" id="tagline">Bringing kindness to every corner.</div>
+    </div>
+  </div>
+
+  <nav class="navbar">
+    <a href="frontend.html" class="active">Home</a>
+    <a href="donate.html">Donate</a>
+    <a href="contactus.html">Contact Us</a>
+    <a href="ourservices.html">Our Services</a>
+    <a href="aboutus.html">About Us</a>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
+  </nav>
+
+  <div class="content-wrapper">
+    <main class="main-content">
+      <div class="section-intro">
+        <h2>Welcome to Charity Flow</h2>
+        <p>Empowering change by bridging the gap between those who want to give and those who need it most. Every contribution matters.</p>
+      </div>
+
+      <div class="banners">
+        <div class="banner">
+          <img src="https://img.icons8.com/ios-filled/100/heart-with-arrow--v1.png" alt="Compassion" />
+          <h4>Compassion First</h4>
+          <p>Providing essentials to communities in crisis.</p>
+        </div>
+        <div class="banner">
+          <img src="https://img.icons8.com/ios-filled/100/graduation-cap.png" alt="Education" />
+          <h4>Education for All</h4>
+          <p>Empowering children through learning worldwide.</p>
+        </div>
+        <div class="banner">
+          <img src="https://img.icons8.com/ios-filled/100/hospital-room.png" alt="Healing" />
+          <h4>Hope and Healing</h4>
+          <p>Delivering medical aid and support to those in need.</p>
+        </div>
+      </div>
+    </main>
+
+    <aside class="sidebar">
+      <h3>Active Campaigns</h3>
+      <div class="ad-card">
+        <h4>Helping Hands</h4>
+        <p>Support our drive to build wells in rural areas.</p>
+        <button onclick="window.location.href='donate.html'">Donate Now</button>
+      </div>
+      <div class="ad-card">
+        <h4>Bright Futures</h4>
+        <p>Help fund education kits for underprivileged children.</p>
+        <button onclick="window.location.href='donate.html'">Donate Now</button>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("charityToken");
+    if (!token) window.location.href = "login.html";
+
+    window.onload = async () => {
+      const userEmail = localStorage.getItem("userEmail") || "User";
+      document.getElementById("profileEmail").textContent = userEmail;
+    };
+
+    // 2. Rotating Taglines
+    const taglines = [
+      "Bringing kindness to every corner.",
+      "Be the change you want to see.",
+      "Every small help counts.",
+      "Together we make a difference."
+    ];
+
+    let index = 0;
+    const taglineElement = document.getElementById('tagline');
+
+    function rotateTagline() {
+      taglineElement.classList.remove('show');
+      setTimeout(() => {
+        index = (index + 1) % taglines.length;
+        taglineElement.textContent = taglines[index];
+        taglineElement.classList.add('show');
+      }, 500);
+    }
+
+    taglineElement.classList.add('show');
+    setInterval(rotateTagline, 4000);
+
+    // 3. Standardized Logout
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.clear();
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>
