@@ -30,7 +30,9 @@ async def get_contact_messages(request: Request, user: dict = Depends(admin_only
     contacts = []
     async for entry in cursor:
         received_at = entry.get("received_at")
-        if hasattr(received_at, "strftime"):
+        if hasattr(received_at, "isoformat"):
+            received_at_str = received_at.isoformat()
+        elif hasattr(received_at, "strftime"):
             received_at_str = received_at.strftime("%Y-%m-%d %H:%M")
         else:
             received_at_str = str(received_at) if received_at else ""

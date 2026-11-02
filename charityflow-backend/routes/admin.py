@@ -54,6 +54,15 @@ async def get_stats(request: Request, user: dict = Depends(admin_only)):
         "delivered_count": delivered_count
     }
 
+@router.get("/actions-today")
+async def get_actions_today(request: Request, user: dict = Depends(admin_only)):
+    db = request.app.state.db
+    from datetime import datetime, time
+    now_utc = datetime.utcnow()
+    start_of_day = datetime.combine(now_utc.date(), time.min)
+    count = await db.activity_logs.count_documents({"timestamp": {"$gte": start_of_day}})
+    return {"actions_today": count}
+
 @router.get("/users")
 async def get_users(request: Request, user: dict = Depends(admin_only)):
     db = request.app.state.db

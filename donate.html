@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Donate Items | Charity Flow</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/common.js"></script>
   <style>
     :root {
       --primary-color: #1d3557;
@@ -53,29 +55,6 @@
       gap: 8px;
     }
     .profile-chip:hover { background: rgba(255,255,255,0.25); }
-    .profile-dropdown {
-      position: absolute;
-      top: 50px;
-      right: 20px;
-      background: white;
-      color: var(--primary-color);
-      border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      width: 250px;
-      display: none;
-      flex-direction: column;
-      text-align: left;
-      z-index: 2000;
-      overflow: hidden;
-    }
-    .profile-dropdown.show { display: flex; }
-    .dropdown-item {
-      padding: 10px 15px;
-      font-size: 0.8rem;
-      border-bottom: 1px solid #eee;
-    }
-    .dropdown-item:last-child { border-bottom: none; }
-    .dropdown-item .time { color: #888; font-size: 0.7rem; margin-top: 4px; }
 
     .site-title {
       font-size: clamp(2.5rem, 8vw, 4rem);
@@ -168,7 +147,7 @@
 
     select:focus, textarea:focus { border-color: var(--accent-color); }
 
-    /* Improved Dropzone */
+    /* Improved Accessible Dropzone */
     .dropzone {
       border: 2px dashed #a8dadc;
       padding: 30px;
@@ -180,7 +159,7 @@
       transition: all 0.3s;
     }
 
-    .dropzone:hover {
+    .dropzone:hover, .dropzone:focus-visible {
       background: #eef7f9;
       border-color: var(--accent-color);
     }
@@ -206,6 +185,24 @@
 
     .submit-button:hover { background: var(--primary-color); }
 
+    .inline-msg-box {
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+      display: none;
+    }
+    .inline-msg-success {
+      background: #d1e7dd;
+      color: #0f5132;
+      border: 1px solid #badbcc;
+    }
+    .inline-msg-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c2c7;
+    }
+
     .cta {
       margin-top: 2rem;
       text-align: center;
@@ -215,7 +212,7 @@
 
     @media (max-width: 600px) {
       .main-content { padding: 1.5rem; }
-      .navbar { gap: 1rem; font-size: 0.9rem; }
+      .navbar { gap: 1rem; font-size: 0.9rem; flex-wrap: wrap; }
     }
   </style>
 </head>
@@ -243,6 +240,8 @@
   <div class="content">
     <div class="main-content">
       <h2 class="section-title">Donate Your Items</h2>
+
+      <div id="inlineMessage" class="inline-msg-box"></div>
       
       <form id="donationForm">
         <div class="form-group">
@@ -271,12 +270,12 @@
         </div>
 
         <div class="form-group">
-          <label>Upload Photos</label>
-          <div class="dropzone" id="dropzone">
-            <p>Click or drag photos here to upload</p>
+          <label>Upload Photos (JPG, PNG, WEBP — Max 5 files, 5 MB each)</label>
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload photos. Click or press Enter or Space to choose files">
+            <p>Click, press Enter, or drag photos here to upload</p>
             <div id="file-list">No files selected</div>
           </div>
-          <input type="file" id="photos" name="donationImage" accept="image/*" multiple style="display:none;">
+          <input type="file" id="photos" name="donationImage" accept="image/jpeg,image/png,image/webp" multiple style="display:none;" aria-hidden="true">
         </div>
 
         <div class="form-group">
@@ -295,103 +294,129 @@
   </div>
 
 <script>
-  const token = localStorage.getItem("charityToken");
-  if (!token) window.location.href = "login.html";
+  requireLogin();
+  initUserProfileChip();
+  initTagline();
 
-  window.onload = async () => {
-    const userEmail = localStorage.getItem("userEmail") || "User";
-    document.getElementById("profileEmail").textContent = userEmail;
-  };
-
-  // 1. Tagline Rotation
-  const taglines = [
-    "Bringing kindness to every corner.",
-    "Be the change you want to see.",
-    "Every small help counts.",
-    "Together we make a difference."
-  ];
-  let index = 0;
-  const taglineElement = document.getElementById('tagline');
-
-  function rotateTagline() {
-    taglineElement.classList.remove('show');
-    setTimeout(() => {
-      index = (index + 1) % taglines.length;
-      taglineElement.textContent = taglines[index];
-      taglineElement.classList.add('show');
-    }, 500);
-  }
-  taglineElement.classList.add('show');
-  setInterval(rotateTagline, 4000);
-
-  // 2. File Selection UI Logic
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('photos');
   const fileList = document.getElementById('file-list');
+  const inlineMessage = document.getElementById('inlineMessage');
 
+  function showInlineMessage(msg, isError) {
+    inlineMessage.className = 'inline-msg-box ' + (isError ? 'inline-msg-error' : 'inline-msg-success');
+    inlineMessage.setAttribute('role', isError ? 'alert' : 'status');
+    inlineMessage.textContent = msg;
+    inlineMessage.style.display = 'block';
+    showToast(msg, isError ? 'error' : 'success');
+  }
+
+  function clearInlineMessage() {
+    inlineMessage.style.display = 'none';
+    inlineMessage.textContent = '';
+  }
+
+  // Keyboard accessibility for dropzone
   dropzone.addEventListener('click', () => fileInput.click());
-
-  fileInput.addEventListener('change', () => {
-    const files = fileInput.files;
-    if (files.length > 0) {
-      fileList.textContent = `${files.length} file(s) selected: ` + 
-        Array.from(files).map(f => f.name).join(', ');
-    } else {
-      fileList.textContent = "No files selected";
+  dropzone.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ' || e.keyCode === 32 || e.keyCode === 13) {
+      e.preventDefault();
+      fileInput.click();
     }
   });
 
-  // 3. Logout Logic
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    localStorage.clear();
-    window.location.href = "login.html";
+  // Client-side file checks matching backend
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+  const ALLOWED_EXTS = [".jpg", ".jpeg", ".png", ".webp"];
+  const MAX_FILES = 5;
+  const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+  fileInput.addEventListener('change', () => {
+    clearInlineMessage();
+    const files = Array.from(fileInput.files);
+    if (files.length === 0) {
+      fileList.textContent = "No files selected";
+      return;
+    }
+
+    if (files.length > MAX_FILES) {
+      showInlineMessage(`You can upload a maximum of ${MAX_FILES} photos. Please re-select.`, true);
+      fileInput.value = '';
+      fileList.textContent = "No files selected";
+      return;
+    }
+
+    for (let f of files) {
+      const ext = '.' + f.name.split('.').pop().toLowerCase();
+      const validExt = ALLOWED_EXTS.includes(ext);
+      const validType = ALLOWED_TYPES.includes(f.type);
+      if (!validExt && !validType) {
+        showInlineMessage(`Invalid file format for "${f.name}". Only JPG, PNG, and WEBP are allowed.`, true);
+        fileInput.value = '';
+        fileList.textContent = "No files selected";
+        return;
+      }
+      if (f.size > MAX_SIZE_BYTES) {
+        showInlineMessage(`"${f.name}" is too large (${(f.size / (1024 * 1024)).toFixed(1)} MB). Each file must be under 5 MB.`, true);
+        fileInput.value = '';
+        fileList.textContent = "No files selected";
+        return;
+      }
+    }
+
+    fileList.textContent = `${files.length} file(s) selected: ` + files.map(f => f.name).join(', ');
   });
 
-  // 4. Form Submission
+  // Form submission via apiFetch without donorEmail
   document.getElementById('donationForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    clearInlineMessage();
+
+    const files = fileInput.files;
+    if (!files || files.length === 0) {
+      showInlineMessage("Please select at least one photo for the donation.", true);
+      return;
+    }
 
     const formData = new FormData();
     formData.append('location', document.getElementById('location').value);
     formData.append('category', document.getElementById('category').value);
     formData.append('description', document.getElementById('description').value);
-    formData.append('donorEmail', localStorage.getItem('userEmail'));
+    // donorEmail is removed per requirements; backend derives identity from JWT token
 
-    const files = fileInput.files;
     for (let i = 0; i < files.length; i++) {
       formData.append('photos', files[i]);
     }
 
-    try {
-      const btn = document.querySelector('.submit-button');
-      const origText = btn.textContent;
-      btn.textContent = "Loading...";
+    const btn = document.querySelector('.submit-button');
+    const origText = btn.textContent;
+    btn.textContent = "Submitting...";
+    btn.disabled = true;
 
-      const response = await fetch('http://localhost:8000/donate', {
+    try {
+      const response = await apiFetch('/donate', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
         body: formData
       });
 
       btn.textContent = origText;
+      btn.disabled = false;
+
+      const result = await response.json().catch(() => ({}));
 
       if (response.ok) {
-        alert('Donation request submitted successfully! Our admin team will review it shortly.');
+        showInlineMessage('Donation request submitted successfully! Our admin team will review it shortly.', false);
         this.reset();
         fileList.textContent = "No files selected";
-      } else if (response.status === 401) {
-        localStorage.clear();
-        window.location.href = "login.html";
       } else {
-        const result = await response.json().catch(() => ({}));
-        alert('Error: ' + (result.detail || response.statusText));
+        const errorDetail = result.detail || response.statusText || 'Failed to submit donation.';
+        showInlineMessage(`Error: ${errorDetail}`, true);
       }
     } catch (err) {
       console.error(err);
-      alert('An error occurred while connecting to the server.');
-      document.querySelector('.submit-button').textContent = "Submit Donation Request";
+      btn.textContent = origText;
+      btn.disabled = false;
+      showInlineMessage('An error occurred while connecting to the server. Please try again.', true);
     }
   });
 </script>

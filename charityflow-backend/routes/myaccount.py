@@ -22,10 +22,12 @@ async def get_my_donations(request: Request, user: dict = Depends(get_current_us
                 except Exception:
                     ngo_name = ""
 
-            # Format created_at safely
+            # Format created_at safely as ISO string
             created_at = doc.get("created_at")
             try:
-                if created_at and hasattr(created_at, "strftime"):
+                if created_at and hasattr(created_at, "isoformat"):
+                    created_at_str = created_at.isoformat()
+                elif created_at and hasattr(created_at, "strftime"):
                     created_at_str = created_at.strftime("%Y-%m-%d %H:%M")
                 else:
                     created_at_str = str(created_at) if created_at else ""
@@ -61,10 +63,12 @@ async def get_my_history(request: Request, user: dict = Depends(get_current_user
         # Fetch donations
         donations_cursor = db.donations.find({"donor_email": user["email"]})
         async for d in donations_cursor:
-            # Format date safely
+            # Format date safely as ISO string
             date_val = d.get("created_at")
             try:
-                if date_val and hasattr(date_val, "strftime"):
+                if date_val and hasattr(date_val, "isoformat"):
+                    date_str = date_val.isoformat()
+                elif date_val and hasattr(date_val, "strftime"):
                     date_str = date_val.strftime("%Y-%m-%d %H:%M")
                 else:
                     date_str = str(date_val) if date_val else ""
@@ -96,10 +100,12 @@ async def get_my_history(request: Request, user: dict = Depends(get_current_user
         # Fetch contact messages
         messages_cursor = db.contact_messages.find({"email": user["email"]})
         async for m in messages_cursor:
-            # Format date safely
+            # Format date safely as ISO string
             date_val = m.get("received_at")
             try:
-                if date_val and hasattr(date_val, "strftime"):
+                if date_val and hasattr(date_val, "isoformat"):
+                    date_str = date_val.isoformat()
+                elif date_val and hasattr(date_val, "strftime"):
                     date_str = date_val.strftime("%Y-%m-%d %H:%M")
                 else:
                     date_str = str(date_val) if date_val else ""

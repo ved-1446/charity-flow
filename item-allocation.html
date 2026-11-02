@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Inventory Management | Charity Flow</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/common.js"></script>
   <style>
     :root {
       --primary-color: #1d3557;
@@ -35,7 +37,50 @@
       justify-content: center;
       color: white;
       text-align: center;
+      position: relative;
     }
+
+    .profile-chip {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      backdrop-filter: blur(5px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-chip:hover { background: rgba(255,255,255,0.25); }
+    .profile-dropdown {
+      position: absolute;
+      top: 50px;
+      right: 20px;
+      background: white;
+      color: var(--primary-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 250px;
+      display: none;
+      flex-direction: column;
+      text-align: left;
+      z-index: 2000;
+      overflow: hidden;
+    }
+    .profile-dropdown.show { display: flex; }
+    .dropdown-item {
+      padding: 10px 15px;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #eee;
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item .time { color: #888; font-size: 0.7rem; margin-top: 4px; }
 
     .site-title {
       font-size: 3.5rem;
@@ -71,6 +116,8 @@
       display: flex;
       gap: 30px;
       align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .navbar a {
@@ -168,7 +215,7 @@
       margin-top: 15px;
       padding-top: 15px;
       border-top: 1px solid #eee;
-      display: none; /* Shown after clicking Accept */
+      display: none;
     }
 
     .ngo-select {
@@ -218,11 +265,21 @@
       background: #e9ecef;
       margin-bottom: 10px;
     }
+
+    @media (max-width: 768px) {
+      .navbar { height: auto; padding: 12px 10px; }
+      .nav-links { gap: 15px; }
+      .site-title { font-size: 2.5rem; }
+    }
   </style>
 </head>
 <body>
 
   <div class="hero">
+    <div class="profile-chip" id="profileChip">
+      <span id="profileEmail">Profile</span>
+    </div>
+    <div class="profile-dropdown" id="profileDropdown"></div>
     <h1 class="site-title">Charity Flow</h1>
     <div class="tagline" id="tagline">Inventory Management</div>
   </div>
@@ -230,7 +287,7 @@
   <div class="navbar">
     <div class="nav-links">
       <a href="admin.html">Dashboard</a>
-      <a href="donation-requests.html" class="active">Inventory</a>
+      <a href="item-allocation.html" class="active">Inventory</a>
       <a href="manage-users.html">Directory</a>
       <a href="dropoff-tracking.html">Logistics</a>
       <a href="reports-history.html">Reports</a>
@@ -245,68 +302,46 @@
     </div>
 
     <div class="card-container" id="donationsContainer">
-      <!-- Dynamic Donatations Rendered Here -->
+      <!-- Dynamic Donations Rendered Here -->
     </div>
   </div>
 
   <script>
-    // Tagline Logic
-    const taglines = ["Review. Approve. Allocate.", "Bridging the gap.", "Directing Impact.", "Inventory Control."];
-    let index = 0;
-    const taglineElement = document.getElementById('tagline');
+    requireAdmin();
+    initTagline("tagline", ["Review. Approve. Allocate.", "Bridging the gap.", "Directing Impact.", "Inventory Control."]);
+    initAdminProfileChip();
 
-    function rotateTagline() {
-      taglineElement.classList.remove('show');
-      setTimeout(() => {
-        index = (index + 1) % taglines.length;
-        taglineElement.textContent = taglines[index];
-        taglineElement.classList.add('show');
-      }, 500);
-    }
-    taglineElement.classList.add('show');
-    setInterval(rotateTagline, 3000);
-
-    const token = localStorage.getItem('charityToken');
-    if (!token) window.location.href = "login.html";
-    else if (localStorage.getItem('userRole') !== "admin") window.location.href = "frontend.html";
-
-    // Functional Logic
     let ngosList = [];
 
-    document.addEventListener("DOMContentLoaded", async () => {
+    async function loadInventoryData() {
       const container = document.getElementById('donationsContainer');
-      container.innerHTML = "<p>Loading...</p>";
+      renderLoading(container, "Loading inventory and NGOs...");
       
       try {
         const [ngoRes, donRes] = await Promise.all([
-          fetch("http://localhost:8000/admin/ngos", { headers: {'Authorization': `Bearer ${token}`}}),
-          fetch("http://localhost:8000/donations", { headers: {'Authorization': `Bearer ${token}`}})
+          apiFetch("/admin/ngos"),
+          apiFetch("/donations")
         ]);
         
-        if (ngoRes.status === 401 || donRes.status === 401) {
-          localStorage.clear();
-          window.location.href = "login.html";
+        if (!ngoRes.ok || !donRes.ok) {
+          renderError(container, "Failed to load donation inventory. Please check your connection.", loadInventoryData);
           return;
         }
 
-        if(ngoRes.ok) ngosList = await ngoRes.json();
-        
-        if(donRes.ok) {
-          const donations = await donRes.json();
-          const pending = donations.filter(d => d.status === 'pending' || d.status === 'accepted');
-          if (pending.length === 0) {
-            container.innerHTML = "<p>No pending donations at the moment.</p>";
-          } else {
-            renderDonations(pending);
-          }
+        ngosList = await ngoRes.json();
+        const donations = await donRes.json();
+        const pending = (donations || []).filter(d => d.status === 'pending' || d.status === 'accepted');
+
+        if (pending.length === 0) {
+          renderEmpty(container, "No pending donations at the moment.");
         } else {
-          container.innerHTML = "<p>Failed to load data</p>";
+          renderDonations(pending);
         }
       } catch (err) { 
         console.error(err); 
-        container.innerHTML = "<p>Failed to load data</p>";
+        renderError(container, "Failed to load donation inventory. Please check your connection.", loadInventoryData);
       }
-    });
+    }
 
     function renderDonations(donations) {
       const container = document.getElementById('donationsContainer');
@@ -314,7 +349,7 @@
       
       let ngoOptions = `<option disabled selected value="">Select Target NGO</option>`;
       ngosList.forEach(ngo => {
-        ngoOptions += `<option value="${ngo.email}">${ngo.name}</option>`;
+        ngoOptions += `<option value="${escapeHtml(ngo.email)}">${escapeHtml(ngo.name)}</option>`;
       });
 
       donations.forEach(d => {
@@ -322,7 +357,8 @@
         let imgUrl = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=400";
         if (photoPath) {
           photoPath = photoPath.replace(/^uploads[\/\\]/, "");
-          imgUrl = `http://localhost:8000/uploads/${photoPath}`;
+          const base = (window.API_BASE || "").replace(/\/+$/, "");
+          imgUrl = `${base}/uploads/${encodeURIComponent(photoPath)}`;
         }
         const isAccepted = d.status === 'accepted';
         
@@ -330,61 +366,62 @@
         card.className = 'donation-card';
         card.id = `card-${d._id}`;
         card.innerHTML = `
-          <img src="${imgUrl}" class="card-img">
+          <img src="${imgUrl}" class="card-img" alt="${escapeHtml(d.category || 'Donation item')}">
           <div class="card-body">
-            <span class="status-badge" id="badge-${d._id}">${isAccepted ? "Accepted" : "Pending"}</span>
-            <h3>${d.category}</h3>
-            <p><strong>Donor:</strong> ${d.donor_email}</p>
-            <p><strong>Location:</strong> ${d.location}</p>
-            <p>${d.description || ""}</p>
+            <span class="status-badge" id="badge-${escapeHtml(d._id)}" style="${isAccepted ? 'background:#fff3cd;' : ''}">${isAccepted ? "Accepted" : "Pending"}</span>
+            <h3>${escapeHtml(d.category || 'Donation Item')}</h3>
+            <p><strong>Donor:</strong> ${escapeHtml(d.donor_email || 'N/A')}</p>
+            <p><strong>Location:</strong> ${escapeHtml(d.location || 'N/A')}</p>
+            <p>${escapeHtml(d.description || "")}</p>
             
-            <div class="allocation-area" id="alloc-${d._id}" style="display: ${isAccepted ? 'block': 'none'};">
+            <div class="allocation-area" id="alloc-${escapeHtml(d._id)}" style="display: ${isAccepted ? 'block': 'none'};">
               <p><strong>Assign to NGO:</strong></p>
-              <select class="ngo-select" id="select-${d._id}">
+              <select class="ngo-select" id="select-${escapeHtml(d._id)}">
                 ${ngoOptions}
               </select>
-              <button class="btn btn-allocate" onclick="completeAllocation('${d._id}')">Complete Allocation</button>
+              <button class="btn btn-allocate" onclick="completeAllocation('${escapeHtml(d._id)}')">Complete Allocation</button>
             </div>
           </div>
-          <div class="card-actions" id="actions-${d._id}" style="display: ${isAccepted ? 'none': 'flex'};">
-            <button class="btn btn-accept" onclick="acceptItem('${d._id}')">Accept</button>
-            <button class="btn btn-reject" onclick="rejectItem('${d._id}')">Reject</button>
+          <div class="card-actions" id="actions-${escapeHtml(d._id)}" style="display: ${isAccepted ? 'none': 'flex'};">
+            <button class="btn btn-accept" onclick="acceptItem('${escapeHtml(d._id)}')">Accept</button>
+            <button class="btn btn-reject" onclick="rejectItem('${escapeHtml(d._id)}')">Reject</button>
           </div>
         `;
         container.appendChild(card);
-        
-        if (isAccepted) {
-            document.querySelector(`#badge-${d._id}`).style.background = "#fff3cd";
-        }
       });
     }
 
     async function acceptItem(id) {
       try {
-        const res = await fetch(`http://localhost:8000/donations/${id}/status`, {
+        const res = await apiFetch(`/donations/${encodeURIComponent(id)}/status`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ status: "accepted" })
+          body: { status: "accepted" }
         });
-        if(res.ok) {
-          document.getElementById(`alloc-${id}`).style.display = 'block';
-          document.getElementById(`actions-${id}`).style.display = 'none';
+        if (res.ok) {
+          const allocEl = document.getElementById(`alloc-${id}`);
+          const actEl = document.getElementById(`actions-${id}`);
+          if (allocEl) allocEl.style.display = 'block';
+          if (actEl) actEl.style.display = 'none';
           const badge = document.querySelector(`#badge-${id}`);
-          badge.textContent = "Accepted";
-          badge.style.background = "#fff3cd";
-        } else if (res.status === 401) {
-          localStorage.clear(); window.location.href = "login.html";
+          if (badge) {
+            badge.textContent = "Accepted";
+            badge.style.background = "#fff3cd";
+          }
+          showToast("Item marked as Accepted.", "success");
         } else {
           const result = await res.json().catch(() => ({}));
-          alert(result.detail || "Failed to accept item.");
+          showToast(result.detail || "Failed to accept item.", "error");
         }
-      } catch (err) { console.error(err); }
+      } catch (err) {
+        console.error(err);
+        showToast("Connection error while updating status.", "error");
+      }
     }
 
     async function completeAllocation(id) {
       const select = document.getElementById(`select-${id}`);
-      if (!select.value) {
-        alert("Please select an NGO first.");
+      if (!select || !select.value) {
+        showToast("Please select an NGO first.", "warning");
         return;
       }
       
@@ -392,51 +429,58 @@
       const ngoName = select.options[select.selectedIndex].text;
       
       try {
-        const res = await fetch(`http://localhost:8000/admin/allocate`, {
+        const res = await apiFetch("/admin/allocate", {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ donation_id: id, ngo_email: selectedNgoEmail })
+          body: { donation_id: id, ngo_email: selectedNgoEmail }
         });
-        if(res.ok) {
+        if (res.ok) {
           const badge = document.querySelector(`#badge-${id}`);
-          badge.textContent = "Allocated to " + ngoName;
-          badge.style.background = "#d1e7dd";
-          badge.style.color = "#0f5132";
-          
-          document.getElementById(`alloc-${id}`).innerHTML = "<p style='color: var(--success-color); font-weight: 600;'>✓ Successfully Allocated</p>";
-        } else if (res.status === 401) {
-          localStorage.clear(); window.location.href = "login.html";
+          if (badge) {
+            badge.textContent = "Allocated to " + ngoName;
+            badge.style.background = "#d1e7dd";
+            badge.style.color = "#0f5132";
+          }
+          const allocEl = document.getElementById(`alloc-${id}`);
+          if (allocEl) {
+            allocEl.innerHTML = "<p style='color: var(--success-color); font-weight: 600;'>✓ Successfully Allocated</p>";
+          }
+          showToast(`Successfully allocated to ${ngoName}.`, "success");
         } else {
           const result = await res.json().catch(() => ({}));
-          alert(result.detail || "Failed to complete allocation.");
+          showToast(result.detail || "Failed to complete allocation.", "error");
         }
-      } catch (err) { console.error(err); }
-    }
-
-    async function rejectItem(id) {
-      if(confirm("Mark this item as Spam/Rejected?")) {
-        try {
-          const res = await fetch(`http://localhost:8000/donations/${id}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ status: "rejected" })
-          });
-          if(res.ok) {
-            document.getElementById(`card-${id}`).style.opacity = "0.5";
-            document.getElementById(`actions-${id}`).innerHTML = "<p style='color: var(--secondary-color)'>Item Rejected</p>";
-          } else if (res.status === 401) {
-            localStorage.clear(); window.location.href = "login.html";
-          } else {
-            const result = await res.json().catch(() => ({}));
-            alert(result.detail || "Failed to reject item.");
-          }
-        } catch (err) { console.error(err); }
+      } catch (err) {
+        console.error(err);
+        showToast("Connection error while allocating item.", "error");
       }
     }
 
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      localStorage.clear();
-      window.location.href = "login.html";
+    async function rejectItem(id) {
+      if (confirm("Mark this item as Spam/Rejected?")) {
+        try {
+          const res = await apiFetch(`/donations/${encodeURIComponent(id)}/status`, {
+            method: 'PATCH',
+            body: { status: "rejected" }
+          });
+          if (res.ok) {
+            const cardEl = document.getElementById(`card-${id}`);
+            if (cardEl) cardEl.style.opacity = "0.5";
+            const actEl = document.getElementById(`actions-${id}`);
+            if (actEl) actEl.innerHTML = "<p style='color: var(--secondary-color)'>Item Rejected</p>";
+            showToast("Item marked as rejected.", "info");
+          } else {
+            const result = await res.json().catch(() => ({}));
+            showToast(result.detail || "Failed to reject item.", "error");
+          }
+        } catch (err) {
+          console.error(err);
+          showToast("Connection error while rejecting item.", "error");
+        }
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadInventoryData();
     });
   </script>
 </body>

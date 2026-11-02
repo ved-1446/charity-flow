@@ -20,6 +20,7 @@
       font-family: 'Poppins', sans-serif;
       background-color: var(--light-bg);
       color: var(--primary-color);
+      overflow-x: hidden;
     }
 
     .hero {
@@ -87,13 +88,14 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 40px;
-      padding: 20px 10px;
+      gap: 30px;
+      padding: 15px 10px;
       background: white;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       position: sticky;
       top: 0;
       z-index: 1000;
+      flex-wrap: wrap;
     }
 
     .navbar a { text-decoration: none; font-weight: 500; color: var(--primary-color); transition: 0.3s; }
@@ -133,7 +135,16 @@
     .stat-card h4 { margin: 0; color: #666; font-size: 0.9rem; text-transform: uppercase; }
     .stat-card p { margin: 10px 0 0; font-size: 1.8rem; font-weight: 700; }
 
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #ddd;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
+    }
     .tab-btn {
       padding: 12px 25px;
       border: none;
@@ -144,13 +155,14 @@
       cursor: pointer;
       color: #888;
       transition: 0.3s;
+      flex-shrink: 0;
     }
     .tab-btn.active { color: var(--primary-color); border-bottom: 4px solid var(--primary-color); }
 
     .tab-content { display: none; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
     .tab-content.active { display: block; }
 
-    table { width: 100%; border-collapse: collapse; }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
     th { background: var(--primary-color); color: white; padding: 15px; text-align: left; }
     td { padding: 15px; border-bottom: 1px solid #eee; font-size: 0.95rem; }
     tr:hover { background: #f9f9f9; }
@@ -190,7 +202,7 @@
     .timeline-header { display: flex; justify-content: space-between; align-items: center; }
     .timeline-time { color: #888; font-size: 0.85rem; }
     .timeline-email { font-weight: 600; color: var(--primary-color); }
-    .timeline-details { font-size: 0.95rem; color: #555; }
+    .timeline-details { font-size: 0.95rem; color: #555; word-break: break-word; }
 
     .action-btn {
       padding: 6px 12px;
@@ -235,8 +247,10 @@
       font-style: italic;
       color: #0c5460;
       font-size: 0.9rem;
+      word-break: break-word;
     }
     .flagged-row { background: #fffdf5; }
+    .message-text { word-break: break-word; white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -258,7 +272,7 @@
     <a href="manage-users.html">Directory</a>
     <a href="dropoff-tracking.html">Logistics</a>
     <a href="reports-history.html" class="active">Reports</a>
-    <button class="logout-nav" onclick="localStorage.clear(); location.href='login.html'">Logout</button>
+    <button class="logout-nav" id="logoutBtn">Logout</button>
   </nav>
 
   <div class="content">
@@ -266,15 +280,15 @@
     <div class="stat-row">
       <div class="stat-card">
         <h4>Total Activity</h4>
-        <p id="statTotal">Loading...</p>
+        <p id="statTotal">--</p>
       </div>
       <div class="stat-card" style="border-color: var(--success);">
         <h4>Successful Drops</h4>
-        <p id="statDelivered">Loading...</p>
+        <p id="statDelivered">--</p>
       </div>
       <div class="stat-card" style="border-color: var(--secondary-color);">
         <h4>Spam Blocked</h4>
-        <p id="statSpam">Loading...</p>
+        <p id="statSpam">--</p>
       </div>
     </div>
 
@@ -291,41 +305,51 @@
     </div>
 
     <div id="spam" class="tab-content">
-      <table>
-        <thead>
-          <tr>
-            <th>Date Flagged</th>
-            <th>User Email</th>
-            <th>Reason</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="spamBody">
-          <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Date Flagged</th>
+              <th>User Email</th>
+              <th>Reason</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="spamBody">
+            <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div id="contacts" class="tab-content">
-      <table>
-        <thead>
-          <tr>
-            <th>Date Received</th>
-            <th>Sender</th>
-            <th>Message</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="contactsTableBody">
-          <tr><td colspan="5" style="text-align:center;">Loading...</td></tr>
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Date Received</th>
+              <th>Sender</th>
+              <th>Message</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="contactsTableBody">
+            <tr><td colspan="5" style="text-align:center;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </div>
 
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/common.js"></script>
   <script>
+    requireAdmin();
+    initTagline(["Reports & History", "Tracking Impact", "Transparency Log", "System Oversight"]);
+    initAdminProfileChip();
+
     // Tab switching
     function openTab(evt, tabName) {
       const contents = document.getElementsByClassName("tab-content");
@@ -335,26 +359,6 @@
       document.getElementById(tabName).classList.add("active");
       evt.currentTarget.classList.add("active");
     }
-
-    // Tagline rotation
-    const taglines = ["Reports & History", "Tracking Impact", "Transparency Log", "System Oversight"];
-    let idx = 0;
-    const tagEl = document.getElementById('tagline');
-    function rotate() {
-      tagEl.classList.remove('show');
-      setTimeout(() => {
-        idx = (idx + 1) % taglines.length;
-        tagEl.textContent = taglines[idx];
-        tagEl.classList.add('show');
-      }, 500);
-    }
-    tagEl.classList.add('show');
-    setInterval(rotate, 3000);
-
-    // Session guard
-    const token = localStorage.getItem('charityToken');
-    if (!token) window.location.href = "login.html";
-    else if (localStorage.getItem('userRole') !== "admin") window.location.href = "frontend.html";
 
     // Badge helpers
     function getBadgeClass(action) {
@@ -381,132 +385,108 @@
       return mapping[action] || '#adb5bd';
     }
 
-    // Main data load
-    document.addEventListener("DOMContentLoaded", async () => {
-      // Profile chip setup
-      const userEmail = localStorage.getItem("userEmail") || "Admin";
-      document.getElementById("profileEmail").textContent = userEmail;
+    // Load data
+    async function loadReportsData() {
+      const timelineEl = document.getElementById('historyTimeline');
+      const spamBody = document.getElementById('spamBody');
+      const contactsBody = document.getElementById("contactsTableBody");
 
-      const profileChip = document.getElementById("profileChip");
-      const profileDropdown = document.getElementById("profileDropdown");
-
-      profileChip.addEventListener("click", (e) => {
-        e.stopPropagation();
-        profileDropdown.classList.toggle("show");
-      });
-
-      document.addEventListener("click", (e) => {
-        if (!profileChip.contains(e.target) && !profileDropdown.contains(e.target)) {
-          profileDropdown.classList.remove("show");
-        }
-      });
+      timelineEl.innerHTML = renderLoading("Loading activity timeline...");
+      spamBody.innerHTML = `<tr><td colspan="4">${renderLoading("Loading spam reports...")}</td></tr>`;
+      contactsBody.innerHTML = `<tr><td colspan="5">${renderLoading("Loading contact messages...")}</td></tr>`;
 
       try {
-        // Fetch all data in parallel
-        const [actRes, spamRes, statsRes, myActRes, contactRes] = await Promise.all([
-          fetch("http://localhost:8000/reports/activity", { headers: { 'Authorization': `Bearer ${token}` }}),
-          fetch("http://localhost:8000/reports/spam", { headers: { 'Authorization': `Bearer ${token}` }}),
-          fetch("http://localhost:8000/admin/stats", { headers: { 'Authorization': `Bearer ${token}` }}),
-          fetch("http://localhost:8000/admin/my-activity", { headers: { 'Authorization': `Bearer ${token}` }}),
-          fetch("http://localhost:8000/reports/contact", { headers: { 'Authorization': `Bearer ${token}` }})
+        const [actRes, spamRes, statsRes, contactRes] = await Promise.all([
+          apiFetch("/reports/activity"),
+          apiFetch("/reports/spam"),
+          apiFetch("/admin/stats"),
+          apiFetch("/reports/contact")
         ]);
 
-        // Check for auth errors
-        if (actRes.status === 401 || spamRes.status === 401 || statsRes.status === 401) {
-          localStorage.clear();
-          window.location.href = "login.html";
-          return;
-        }
-
-        // Profile dropdown — my activity
-        if (myActRes.ok) {
-          const acts = await myActRes.json();
-          profileDropdown.innerHTML = acts.length === 0
-            ? '<div class="dropdown-item">No recent activity</div>'
-            : acts.map(act => `
-                <div class="dropdown-item">
-                  <div><strong>${act.action}</strong>: ${act.details}</div>
-                  <div class="time">${act.timestamp}</div>
-                </div>
-              `).join('');
-        }
-
-        // Activity history timeline
+        // Activity timeline
         if (actRes.ok) {
           const acts = await actRes.json();
           document.getElementById('statTotal').textContent = acts.length;
-          document.getElementById('historyTimeline').innerHTML = acts.length === 0
-            ? "<p style='text-align:center; padding: 20px;'>No records found</p>"
-            : acts.map(a => `
-                <div class="timeline-item" style="border-left-color: ${getBorderColor(a.action)};">
-                  <div class="timeline-content">
-                    <div class="timeline-header">
-                      <span class="badge ${getBadgeClass(a.action)}">${a.action.replace(/_/g, ' ')}</span>
-                      <span class="timeline-time">${a.timestamp || ''}</span>
-                    </div>
-                    <div><span class="timeline-email">${a.user_email || ''}</span></div>
-                    <div class="timeline-details">${a.details || ''}</div>
+          if (acts.length === 0) {
+            timelineEl.innerHTML = renderEmpty("No activity records found.");
+          } else {
+            timelineEl.innerHTML = acts.map(a => `
+              <div class="timeline-item" style="border-left-color: ${getBorderColor(a.action)};">
+                <div class="timeline-content">
+                  <div class="timeline-header">
+                    <span class="badge ${getBadgeClass(a.action)}">${escapeHtml((a.action || '').replace(/_/g, ' '))}</span>
+                    <span class="timeline-time">${formatDate(a.timestamp)}</span>
                   </div>
+                  <div><span class="timeline-email">${escapeHtml(a.user_email || '')}</span></div>
+                  <div class="timeline-details">${escapeHtml(a.details || '')}</div>
                 </div>
-              `).join('');
+              </div>
+            `).join('');
+          }
         } else {
-          document.getElementById('historyTimeline').innerHTML = "<p style='text-align:center; padding: 20px;'>Failed to load activity</p>";
+          timelineEl.innerHTML = renderError("Failed to load activity history.", "loadReportsData()");
+          document.getElementById('statTotal').textContent = "--";
         }
 
         // Spam reports
         if (spamRes.ok) {
           const spams = await spamRes.json();
           document.getElementById('statSpam').textContent = spams.length;
-          document.getElementById('spamBody').innerHTML = spams.length === 0
-            ? "<tr><td colspan='4' style='text-align:center;'>No records found</td></tr>"
-            : spams.map(s => `
-                <tr>
-                  <td>${s.created_at || 'N/A'}</td>
-                  <td>${s.donor_email || s.user_email || 'N/A'}</td>
-                  <td><span class="badge badge-red">Rejected</span></td>
-                  <td>Entry Removed</td>
-                </tr>
-              `).join('');
+          if (spams.length === 0) {
+            spamBody.innerHTML = `<tr><td colspan="4">${renderEmpty("No spam reports found.")}</td></tr>`;
+          } else {
+            spamBody.innerHTML = spams.map(s => `
+              <tr>
+                <td>${formatDate(s.created_at)}</td>
+                <td>${escapeHtml(s.donor_email || s.user_email || 'N/A')}</td>
+                <td><span class="badge badge-red">Rejected</span></td>
+                <td>Entry Removed</td>
+              </tr>
+            `).join('');
+          }
         } else {
-          document.getElementById('spamBody').innerHTML = "<tr><td colspan='4' style='text-align:center;'>Failed to load data</td></tr>";
+          spamBody.innerHTML = `<tr><td colspan="4">${renderError("Failed to load spam reports.", "loadReportsData()")}</td></tr>`;
+          document.getElementById('statSpam').textContent = "--";
         }
 
         // Stats
         if (statsRes.ok) {
           const stats = await statsRes.json();
-          document.getElementById('statDelivered').textContent = stats.delivered_count;
+          document.getElementById('statDelivered').textContent = stats.delivered_count ?? 0;
+        } else {
+          document.getElementById('statDelivered').textContent = "--";
         }
 
         // Contact messages
         if (contactRes.ok) {
           const contacts = await contactRes.json();
-          const tbody = document.getElementById("contactsTableBody");
           if (contacts.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#666;">No messages received yet.</td></tr>`;
+            contactsBody.innerHTML = `<tr><td colspan="5">${renderEmpty("No contact messages received yet.")}</td></tr>`;
           } else {
-            tbody.innerHTML = contacts.map(c => {
+            contactsBody.innerHTML = contacts.map(c => {
               const rowClass = c.status === 'flagged' ? 'flagged-row' : '';
               let badgeClass = 'badge-grey';
               if (c.status === 'replied') badgeClass = 'badge-green';
               if (c.status === 'flagged') badgeClass = 'badge-yellow';
+              const msgId = escapeHtml(c.message_id || '');
               return `
-                <tr class="${rowClass}" id="contact-row-${c.message_id}">
-                  <td>${c.received_at || 'N/A'}</td>
-                  <td><strong>${c.name || ''}</strong><br><small>${c.email || ''}</small></td>
+                <tr class="${rowClass}" id="contact-row-${msgId}">
+                  <td>${formatDate(c.received_at)}</td>
+                  <td><strong>${escapeHtml(c.name || '')}</strong><br><small>${escapeHtml(c.email || '')}</small></td>
                   <td>
-                    ${c.message || ''}
-                    ${c.reply ? `<div class="reply-text"><strong>Admin replied (${c.replied_by || ''}):</strong> ${c.reply}</div>` : ''}
-                    <div class="reply-box" id="reply-box-${c.message_id}">
-                      <textarea id="reply-text-${c.message_id}" placeholder="Type your reply..."></textarea>
-                      <button class="action-btn" onclick="sendReply('${c.message_id}')">Send Reply</button>
+                    <div class="message-text">${escapeHtml(c.message || '')}</div>
+                    ${c.reply ? `<div class="reply-text"><strong>Admin replied (${escapeHtml(c.replied_by || '')}):</strong> ${escapeHtml(c.reply)}</div>` : ''}
+                    <div class="reply-box" id="reply-box-${msgId}">
+                      <textarea id="reply-text-${msgId}" placeholder="Type your reply..."></textarea>
+                      <button type="button" class="action-btn" onclick="sendReply('${msgId}')">Send Reply</button>
                     </div>
                   </td>
-                  <td><span class="badge ${badgeClass}" id="status-${c.message_id}">${c.status || 'pending'}</span></td>
+                  <td><span class="badge ${badgeClass}" id="status-${msgId}">${escapeHtml(c.status || 'pending')}</span></td>
                   <td>
                     <div style="display:flex; gap: 5px; flex-wrap: wrap;">
-                      <button class="action-btn" onclick="document.getElementById('reply-box-${c.message_id}').classList.toggle('show')">Reply</button>
-                      <button class="action-btn flag-btn" onclick="flagMessage('${c.message_id}')">Flag</button>
-                      <button class="action-btn dismiss-btn" onclick="document.getElementById('contact-row-${c.message_id}').style.display='none'">Dismiss</button>
+                      <button type="button" class="action-btn" onclick="toggleReplyBox('${msgId}')">Reply</button>
+                      <button type="button" class="action-btn flag-btn" onclick="flagMessage('${msgId}')">Flag</button>
+                      <button type="button" class="action-btn dismiss-btn" onclick="dismissRow('${msgId}')">Dismiss</button>
                     </div>
                   </td>
                 </tr>
@@ -514,61 +494,69 @@
             }).join('');
           }
         } else {
-          document.getElementById("contactsTableBody").innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Failed to load messages.</td></tr>`;
+          contactsBody.innerHTML = `<tr><td colspan="5">${renderError("Failed to load contact messages.", "loadReportsData()")}</td></tr>`;
         }
 
       } catch (err) {
         console.error("Reports page error:", err);
-        document.getElementById('statTotal').textContent = "Error";
-        document.getElementById('statDelivered').textContent = "Error";
-        document.getElementById('statSpam').textContent = "Error";
-        document.getElementById('historyTimeline').innerHTML = "<p style='text-align:center; padding: 20px; color:red;'>Failed to connect to server.</p>";
-        document.getElementById('spamBody').innerHTML = "<tr><td colspan='4' style='text-align:center; color:red;'>Failed to connect to server.</td></tr>";
-        document.getElementById('contactsTableBody').innerHTML = "<tr><td colspan='5' style='text-align:center; color:red;'>Failed to connect to server.</td></tr>";
-      }
-    });
-
-    // Send reply
-    async function sendReply(id) {
-      const text = document.getElementById(`reply-text-${id}`).value.trim();
-      if (!text) { alert("Please type a reply first."); return; }
-      try {
-        const res = await fetch(`http://localhost:8000/contact/${id}/reply`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ reply: text })
-        });
-        if (res.ok) {
-          alert("Reply sent successfully!");
-          location.reload();
-        } else {
-          alert('Failed to send reply. Please try again.');
-        }
-      } catch (e) {
-        alert('Error connecting to server.');
+        timelineEl.innerHTML = renderError("Failed to connect to server.", "loadReportsData()");
+        spamBody.innerHTML = `<tr><td colspan="4">${renderError("Failed to connect to server.", "loadReportsData()")}</td></tr>`;
+        contactsBody.innerHTML = `<tr><td colspan="5">${renderError("Failed to connect to server.", "loadReportsData()")}</td></tr>`;
       }
     }
 
-    // Flag message
+    function toggleReplyBox(id) {
+      const box = document.getElementById(`reply-box-${id}`);
+      if (box) box.classList.toggle('show');
+    }
+
+    function dismissRow(id) {
+      const row = document.getElementById(`contact-row-${id}`);
+      if (row) row.style.display = 'none';
+    }
+
+    async function sendReply(id) {
+      const input = document.getElementById(`reply-text-${id}`);
+      const text = input ? input.value.trim() : "";
+      if (!text) {
+        showToast("Please type a reply first.", "error");
+        return;
+      }
+      try {
+        const res = await apiFetch(`/contact/${id}/reply`, {
+          method: 'POST',
+          body: { reply: text }
+        });
+        if (res.ok) {
+          showToast("Reply sent successfully!", "success");
+          loadReportsData();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          showToast(err.detail || "Failed to send reply. Please try again.", "error");
+        }
+      } catch (e) {
+        showToast("Error connecting to server.", "error");
+      }
+    }
+
     async function flagMessage(id) {
       try {
-        const res = await fetch(`http://localhost:8000/contact/${id}/flag`, {
-          method: 'PATCH',
-          headers: { 'Authorization': `Bearer ${token}` }
+        const res = await apiFetch(`/contact/${id}/flag`, {
+          method: 'PATCH'
         });
         if (res.ok) {
-          alert("Message flagged successfully!");
-          location.reload();
+          showToast("Message flagged successfully!", "success");
+          loadReportsData();
         } else {
-          alert('Failed to flag message.');
+          const err = await res.json().catch(() => ({}));
+          showToast(err.detail || "Failed to flag message.", "error");
         }
       } catch (e) {
-        alert('Error connecting to server.');
+        showToast("Error connecting to server.", "error");
       }
     }
+
+    document.addEventListener("DOMContentLoaded", loadReportsData);
   </script>
 </body>
 </html>

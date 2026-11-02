@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Account | Charity Flow</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/common.js"></script>
   <style>
     :root {
       --primary-color: #1d3557;
@@ -108,7 +110,16 @@
       padding: 0 20px;
     }
 
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #ddd;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
+    }
     .tab-btn {
       padding: 12px 25px;
       border: none;
@@ -119,6 +130,7 @@
       cursor: pointer;
       color: #888;
       transition: 0.3s;
+      flex-shrink: 0;
     }
     .tab-btn.active { color: var(--primary-color); border-bottom: 4px solid var(--primary-color); }
 
@@ -132,54 +144,6 @@
       padding: 20px;
       margin-bottom: 15px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 10px;
-    }
-    .card-title {
-      font-weight: bold;
-      font-size: 1.1rem;
-      margin: 0;
-    }
-    .card-subtitle {
-      color: #888;
-      font-size: 0.9rem;
-      margin-top: 2px;
-    }
-    .card-body {
-      color: #555;
-      font-size: 0.95rem;
-      margin-bottom: 15px;
-    }
-    .card-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.85rem;
-      color: #666;
-    }
-    
-    .msg-box {
-      background: #f1f1f1;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      color: #333;
-    }
-    .reply-box {
-      background: #e7f1ff;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 5px;
-      color: #0c5460;
-      font-size: 0.9rem;
-    }
-    .reply-meta {
-      font-size: 0.8rem;
-      color: #888;
     }
 
     /* Badges */
@@ -200,26 +164,14 @@
     .badge-red { background: #f8d7da; color: #721c24; }
     .badge-grey { background: #e9ecef; color: #495057; }
 
-    /* Timeline CSS */
-    .timeline-wrap { position: relative; padding-left: 30px; }
-    .timeline-wrap::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: #e0e0e0; }
-    .tl-item { position: relative; margin-bottom: 25px; }
-    .tl-dot { position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: #457b9d; }
-    .tl-dot.msg { background: #e63946; }
-    .tl-content { background: white; border-radius: 10px; padding: 15px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    .tl-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .tl-title { font-weight: 600; color: #1d3557; }
-    .tl-date { font-size: 0.8rem; color: #888; }
-    .tl-desc { font-size: 0.9rem; color: #555; margin-bottom: 8px; }
-    .tl-reply { background: #e7f1ff; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; color: #0c5460; margin-top: 8px; }
-    .tl-ngo { font-size: 0.85rem; color: #457b9d; font-style: italic; margin-top: 5px; }
-
-    .empty-state { text-align: center; padding: 40px; color: #666; font-style: italic; }
-    .loading-state { text-align: center; padding: 40px; color: #666; }
+    @media (max-width: 600px) {
+      .navbar { gap: 1rem; font-size: 0.9rem; }
+      .content-wrapper { padding: 0 12px; }
+      .tab-btn { padding: 10px 16px; font-size: 0.9rem; }
+    }
   </style>
 </head>
 <body>
-
 
   <div class="hero">
     <div class="profile-chip" id="profileChip">
@@ -250,31 +202,32 @@
   </div>
 
   <div class="content-wrapper">
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="myDonations" onclick="switchTab('myDonations')">My Donations</button>
-      <button class="tab-btn" data-tab="myMessages" onclick="switchTab('myMessages')">My Messages</button>
-      <button class="tab-btn" data-tab="myHistory" onclick="switchTab('myHistory')">Drop-off History</button>
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" role="tab" aria-selected="true" data-tab="myDonations" onclick="switchTab('myDonations')">My Donations</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="myMessages" onclick="switchTab('myMessages')">My Messages</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="myHistory" onclick="switchTab('myHistory')">Drop-off History</button>
     </div>
 
-    <div id="myDonations" class="tab-content" style="display:block;"></div>
-    <div id="myMessages" class="tab-content" style="display:none;"></div>
-    <div id="myHistory" class="tab-content" style="display:none;"></div>
+    <div id="myDonations" class="tab-content" role="tabpanel" style="display:block;"></div>
+    <div id="myMessages" class="tab-content" role="tabpanel" style="display:none;"></div>
+    <div id="myHistory" class="tab-content" role="tabpanel" style="display:none;"></div>
   </div>
 
   <script>
-    const token = localStorage.getItem("charityToken");
-    if (!token) { window.location.href = "login.html"; }
-
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      localStorage.clear();
-      window.location.href = "login.html";
-    });
+    requireLogin();
 
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
       document.getElementById(tabName).style.display = 'block';
-      document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+      const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('active');
+        activeBtn.setAttribute('aria-selected', 'true');
+      }
       if (tabName === 'myDonations') loadDonations();
       if (tabName === 'myMessages') loadMessages();
       if (tabName === 'myHistory') loadHistory();
@@ -282,77 +235,86 @@
 
     async function loadDonations() {
       const container = document.getElementById('myDonations');
-      container.innerHTML = "<p style='text-align:center; color:#666;'>Loading...</p>";
+      renderLoading(container, "Loading your donations...");
       try {
-        const res = await fetch("http://localhost:8000/donations/my-donations", {
-          method: "GET",
-          headers: {
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json"
-          }
-        });
-        if (res.status === 401) { localStorage.clear(); window.location.href = "login.html"; return; }
-        if (!res.ok) { container.innerHTML = "<p style='text-align:center; color:red;'>Failed to load donations. Please check your connection.</p>"; return; }
+        const res = await apiFetch("/donations/my-donations");
+        if (!res.ok) {
+          renderError(container, "Failed to load donations. Please check your connection.", loadDonations);
+          return;
+        }
         const data = await res.json();
-        if (data.length === 0) { container.innerHTML = "<p style='text-align:center; color:#666;'>You have not made any donations yet.</p>"; return; }
+        if (!data || data.length === 0) {
+          renderEmpty(container, "You have not made any donations yet.");
+          return;
+        }
+
+        const statusColors = {
+          pending: 'background:#fff3cd; color:#856404;',
+          accepted: 'background:#cfe2ff; color:#084298;',
+          allocated: 'background:#e8d5f5; color:#4e1d7a;',
+          at_hub: 'background:#ffe5d0; color:#854000;',
+          delivered: 'background:#d1e7dd; color:#0f5132;',
+          rejected: 'background:#f8d7da; color:#721c24;'
+        };
+
         container.innerHTML = data.map(d => {
-          const statusColors = {
-            pending: 'background:#fff3cd; color:#856404;',
-            accepted: 'background:#cfe2ff; color:#084298;',
-            allocated: 'background:#e8d5f5; color:#4e1d7a;',
-            at_hub: 'background:#ffe5d0; color:#854000;',
-            delivered: 'background:#d1e7dd; color:#0f5132;',
-            rejected: 'background:#f8d7da; color:#721c24;'
-          };
           const badgeStyle = statusColors[d.status] || 'background:#e9ecef; color:#495057;';
+          const formattedDate = formatDate(d.created_at);
           return `
             <div style="background:white; border-radius:12px; padding:20px; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h3 style="margin:0; color:#1d3557;">${d.category || 'N/A'}</h3>
-                <span style="padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:600; ${badgeStyle}">${d.status || 'pending'}</span>
+                <h3 style="margin:0; color:#1d3557;">${escapeHtml(d.category || 'Donation')}</h3>
+                <span style="padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:600; ${badgeStyle}">${escapeHtml(d.status || 'pending')}</span>
               </div>
-              <p style="margin:4px 0; color:#666; font-size:0.9rem;">📍 ${d.location || 'N/A'}</p>
-              <p style="margin:4px 0; color:#555; font-size:0.9rem;">${d.description || ''}</p>
-              ${d.ngo_name ? `<p style="margin:8px 0 0; color:#457b9d; font-style:italic; font-size:0.85rem;">Allocated to: ${d.ngo_name}</p>` : ''}
-              <p style="margin:8px 0 0; color:#aaa; font-size:0.8rem;">Submitted: ${d.created_at || ''}</p>
+              <p style="margin:4px 0; color:#666; font-size:0.9rem;">📍 ${escapeHtml(d.location || 'N/A')}</p>
+              <p style="margin:4px 0; color:#555; font-size:0.9rem;">${escapeHtml(d.description || '')}</p>
+              ${d.ngo_name ? `<p style="margin:8px 0 0; color:#457b9d; font-style:italic; font-size:0.85rem;">Allocated to: ${escapeHtml(d.ngo_name)}</p>` : ''}
+              <p style="margin:8px 0 0; color:#aaa; font-size:0.8rem;">Submitted: ${escapeHtml(formattedDate)}</p>
             </div>
           `;
         }).join('');
       } catch (err) {
         console.error("loadDonations error:", err);
-        container.innerHTML = "<p style='text-align:center; color:red;'>Failed to load donations. Please check your connection.</p>";
+        renderError(container, "Failed to load donations. Please check your connection.", loadDonations);
       }
     }
 
     async function loadMessages() {
       const container = document.getElementById('myMessages');
-      container.innerHTML = "<p style='text-align:center; color:#666;'>Loading...</p>";
+      renderLoading(container, "Loading your messages...");
       try {
-        const res = await fetch("http://localhost:8000/contact/my-messages", {
-          method: "GET",
-          headers: {
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json"
-          }
-        });
-        if (res.status === 401) { localStorage.clear(); window.location.href = "login.html"; return; }
-        if (!res.ok) { container.innerHTML = "<p style='text-align:center; color:red;'>Failed to load messages. Please check your connection.</p>"; return; }
+        const res = await apiFetch("/contact/my-messages");
+        if (!res.ok) {
+          renderError(container, "Failed to load messages. Please check your connection.", loadMessages);
+          return;
+        }
         const data = await res.json();
-        if (data.length === 0) { container.innerHTML = "<p style='text-align:center; color:#666;'>You have not sent any messages yet.</p>"; return; }
+        if (!data || data.length === 0) {
+          renderEmpty(container, "You have not sent any messages yet.");
+          return;
+        }
+
+        const statusColors = {
+          pending: 'background:#e9ecef; color:#495057;',
+          replied: 'background:#d1e7dd; color:#0f5132;',
+          flagged: 'background:#fff3cd; color:#856404;'
+        };
+
         container.innerHTML = data.map(m => {
-          const statusColors = { pending: 'background:#e9ecef; color:#495057;', replied: 'background:#d1e7dd; color:#0f5132;', flagged: 'background:#fff3cd; color:#856404;' };
           const badgeStyle = statusColors[m.status] || statusColors.pending;
+          const formattedRecvDate = formatDate(m.received_at);
+          const formattedReplDate = formatDate(m.replied_at);
           return `
             <div style="background:white; border-radius:12px; padding:20px; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span style="color:#888; font-size:0.85rem;">${m.received_at || ''}</span>
-                <span style="padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:600; ${badgeStyle}">${m.status || 'pending'}</span>
+                <span style="color:#888; font-size:0.85rem;">${escapeHtml(formattedRecvDate)}</span>
+                <span style="padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:600; ${badgeStyle}">${escapeHtml(m.status || 'pending')}</span>
               </div>
-              <div style="background:#f8f9fa; padding:12px; border-radius:8px; font-size:0.95rem; color:#333;">${m.message || ''}</div>
+              <div style="background:#f8f9fa; padding:12px; border-radius:8px; font-size:0.95rem; color:#333;">${escapeHtml(m.message || '')}</div>
               ${m.reply ? `
                 <div style="background:#e7f1ff; padding:12px; border-radius:8px; margin-top:10px; font-size:0.9rem; color:#0c5460;">
-                  <strong>Admin replied:</strong> ${m.reply}
-                  <div style="margin-top:4px; font-size:0.8rem; color:#888;">by ${m.replied_by || ''} on ${m.replied_at || ''}</div>
+                  <strong>Admin replied:</strong> ${escapeHtml(m.reply)}
+                  <div style="margin-top:4px; font-size:0.8rem; color:#888;">by ${escapeHtml(m.replied_by || 'Admin')} on ${escapeHtml(formattedReplDate)}</div>
                 </div>
               ` : `<p style="margin:8px 0 0; color:#888; font-style:italic; font-size:0.85rem;">Your message is being reviewed.</p>`}
             </div>
@@ -360,25 +322,25 @@
         }).join('');
       } catch (err) {
         console.error("loadMessages error:", err);
-        container.innerHTML = "<p style='text-align:center; color:red;'>Failed to load messages. Please check your connection.</p>";
+        renderError(container, "Failed to load messages. Please check your connection.", loadMessages);
       }
     }
 
     async function loadHistory() {
       const container = document.getElementById('myHistory');
-      container.innerHTML = "<p style='text-align:center; color:#666;'>Loading...</p>";
+      renderLoading(container, "Loading activity history...");
       try {
-        const res = await fetch("http://localhost:8000/donations/my-history", {
-          method: "GET",
-          headers: {
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json"
-          }
-        });
-        if (res.status === 401) { localStorage.clear(); window.location.href = "login.html"; return; }
-        if (!res.ok) { container.innerHTML = "<p style='text-align:center; color:red;'>Failed to load history. Please check your connection.</p>"; return; }
+        const res = await apiFetch("/donations/my-history");
+        if (!res.ok) {
+          renderError(container, "Failed to load history. Please check your connection.", loadHistory);
+          return;
+        }
         const data = await res.json();
-        if (data.length === 0) { container.innerHTML = "<p style='text-align:center; color:#666;'>No activity yet. Start by making a donation!</p>"; return; }
+        if (!data || data.length === 0) {
+          renderEmpty(container, "No activity yet. Start by making a donation!");
+          return;
+        }
+
         container.innerHTML = `
           <div style="position:relative; padding-left:30px;">
             <div style="position:absolute; left:10px; top:0; bottom:0; width:2px; background:#e0e0e0;"></div>
@@ -387,12 +349,12 @@
                 <div style="position:absolute; left:-25px; top:5px; width:12px; height:12px; border-radius:50%; background:${item.type === 'donation' ? '#457b9d' : '#e63946'};"></div>
                 <div style="background:white; border-radius:10px; padding:15px 20px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <strong style="color:#1d3557;">${item.title || ''}</strong>
-                    <span style="font-size:0.8rem; color:#888;">${item.date || ''}</span>
+                    <strong style="color:#1d3557;">${escapeHtml(item.title || '')}</strong>
+                    <span style="font-size:0.8rem; color:#888;">${escapeHtml(formatDate(item.date))}</span>
                   </div>
-                  <p style="margin:0 0 8px; font-size:0.9rem; color:#555;">${item.description || ''}</p>
-                  ${item.ngo_name ? `<p style="margin:0; color:#457b9d; font-style:italic; font-size:0.85rem;">→ Allocated to ${item.ngo_name}</p>` : ''}
-                  ${item.reply ? `<div style="background:#e7f1ff; padding:8px 12px; border-radius:6px; font-size:0.85rem; color:#0c5460; margin-top:8px;"><strong>Admin replied:</strong> ${item.reply}</div>` : ''}
+                  <p style="margin:0 0 8px; font-size:0.9rem; color:#555;">${escapeHtml(item.description || '')}</p>
+                  ${item.ngo_name ? `<p style="margin:0; color:#457b9d; font-style:italic; font-size:0.85rem;">→ Allocated to ${escapeHtml(item.ngo_name)}</p>` : ''}
+                  ${item.reply ? `<div style="background:#e7f1ff; padding:8px 12px; border-radius:6px; font-size:0.85rem; color:#0c5460; margin-top:8px;"><strong>Admin replied:</strong> ${escapeHtml(item.reply)}</div>` : ''}
                 </div>
               </div>
             `).join('')}
@@ -400,15 +362,16 @@
         `;
       } catch (err) {
         console.error("loadHistory error:", err);
-        container.innerHTML = "<p style='text-align:center; color:red;'>Failed to load history. Please check your connection.</p>";
+        renderError(container, "Failed to load history. Please check your connection.", loadHistory);
       }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+      const email = getUserEmail();
       const emailEl = document.getElementById("welcomeEmail");
-      if (emailEl) emailEl.textContent = localStorage.getItem("userEmail") || "";
+      if (emailEl) emailEl.textContent = email;
       const profileEmailEl = document.getElementById("profileEmail");
-      if (profileEmailEl) profileEmailEl.textContent = localStorage.getItem("userEmail") || "";
+      if (profileEmailEl) profileEmailEl.textContent = email || "Profile";
       loadDonations();
     });
   </script>

@@ -32,7 +32,9 @@ async def get_my_messages(request: Request, user: dict = Depends(get_current_use
             # Build clean dictionary
             received_at = doc.get("received_at")
             try:
-                if received_at and hasattr(received_at, "strftime"):
+                if received_at and hasattr(received_at, "isoformat"):
+                    received_at_str = received_at.isoformat()
+                elif received_at and hasattr(received_at, "strftime"):
                     received_at_str = received_at.strftime("%Y-%m-%d %H:%M")
                 else:
                     received_at_str = str(received_at) if received_at else ""

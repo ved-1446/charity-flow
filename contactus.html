@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Contact Us | Charity Flow</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/common.js"></script>
   <style>
     :root {
       --primary-color: #1d3557;
@@ -187,7 +189,7 @@
 
     @media (max-width: 768px) {
       .contact-container { grid-template-columns: 1fr; }
-      .navbar { gap: 1rem; font-size: 0.9rem; }
+      .navbar { gap: 1rem; font-size: 0.9rem; flex-wrap: wrap; }
     }
   </style>
 </head>
@@ -232,8 +234,11 @@
     <div class="subscribe">
       <h3>Send us a Message</h3>
       <form id="contactForm">
-        <input type="text" id="contactName" placeholder="Full Name" required>
-        <input type="email" id="contactEmail" placeholder="Email Address" required readonly>
+        <label for="contactName" style="display:none;">Full Name</label>
+        <input type="text" id="contactName" placeholder="Full Name" required autocomplete="name">
+        <label for="contactEmail" style="display:none;">Email Address</label>
+        <input type="email" id="contactEmail" placeholder="Email Address" required readonly autocomplete="email">
+        <label for="contactMessage" style="display:none;">Message</label>
         <textarea id="contactMessage" rows="4" placeholder="How can we help you?" required></textarea>
         <button type="submit" class="subscribe-btn">Send Message</button>
       </form>
@@ -241,74 +246,53 @@
   </div>
 
   <script>
-    const token = localStorage.getItem("charityToken");
-    if (!token) window.location.href = "login.html";
+    requireLogin();
+    initUserProfileChip();
 
     // Pre-fill email from logged in user and lock it
-    document.getElementById("contactEmail").value = localStorage.getItem("userEmail") || "";
-    document.getElementById("profileEmail").textContent = localStorage.getItem("userEmail") || "Profile";
+    document.getElementById("contactEmail").value = getUserEmail();
 
-    // Tagline Rotation
-    const taglines = [
+    initTagline("tagline", [
       "We'd love to hear from you!",
       "Bringing kindness to every corner.",
       "Every question matters.",
       "Together we make a difference."
-    ];
-    let index = 0;
-    const taglineElement = document.getElementById('tagline');
+    ]);
 
-    function rotateTagline() {
-      taglineElement.classList.remove('show');
-      setTimeout(() => {
-        index = (index + 1) % taglines.length;
-        taglineElement.textContent = taglines[index];
-        taglineElement.classList.add('show');
-      }, 500);
-    }
-    taglineElement.classList.add('show');
-    setInterval(rotateTagline, 4000);
-
-    // Logout
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      localStorage.clear();
-      window.location.href = "login.html";
-    });
-
-    // Form Submission
+    // Form Submission using apiFetch
     document.getElementById('contactForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      const name = document.getElementById('contactName').value;
-      const email = document.getElementById('contactEmail').value;
-      const message = document.getElementById('contactMessage').value;
+      const name = document.getElementById('contactName').value.trim();
+      const email = document.getElementById('contactEmail').value.trim();
+      const message = document.getElementById('contactMessage').value.trim();
+
+      const btn = document.querySelector('.subscribe-btn');
+      const origText = btn.textContent;
+      btn.textContent = "Sending...";
+      btn.disabled = true;
 
       try {
-        const btn = document.querySelector('.subscribe-btn');
-        const origText = btn.textContent;
-        btn.textContent = "Sending...";
-
-        const response = await fetch("http://localhost:8000/contact", {
+        const response = await apiFetch("/contact", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, message })
+          body: { name, email, message }
         });
 
         btn.textContent = origText;
+        btn.disabled = false;
+
+        const result = await response.json().catch(() => ({}));
 
         if (response.ok) {
-          alert("Thank you for reaching out! We will get back to you shortly.");
+          showToast("Thank you for reaching out! We will get back to you shortly.", "success");
           document.getElementById('contactName').value = "";
           document.getElementById('contactMessage').value = "";
-        } else if (response.status === 401) {
-          localStorage.clear();
-          window.location.href = "login.html";
         } else {
-          const result = await response.json().catch(() => ({}));
-          alert(result.detail || "Something went wrong. Please try again.");
+          showToast(result.detail || "Something went wrong. Please try again.", "error");
         }
       } catch (err) {
-        document.querySelector('.subscribe-btn').textContent = "Send Message";
-        alert("Something went wrong. Please try again.");
+        btn.textContent = origText;
+        btn.disabled = false;
+        showToast("Something went wrong connecting to the server. Please try again.", "error");
       }
     });
   </script>

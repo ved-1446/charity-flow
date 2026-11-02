@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>About Us | Charity Flow</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/common.js"></script>
   <style>
     :root {
       --primary-color: #1d3557;
@@ -54,29 +56,6 @@
       gap: 8px;
     }
     .profile-chip:hover { background: rgba(255,255,255,0.25); }
-    .profile-dropdown {
-      position: absolute;
-      top: 50px;
-      right: 20px;
-      background: white;
-      color: var(--primary-color);
-      border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      width: 250px;
-      display: none;
-      flex-direction: column;
-      text-align: left;
-      z-index: 2000;
-      overflow: hidden;
-    }
-    .profile-dropdown.show { display: flex; }
-    .dropdown-item {
-      padding: 10px 15px;
-      font-size: 0.8rem;
-      border-bottom: 1px solid #eee;
-    }
-    .dropdown-item:last-child { border-bottom: none; }
-    .dropdown-item .time { color: #888; font-size: 0.7rem; margin-top: 4px; }
 
     .site-title {
       font-size: clamp(2.5rem, 8vw, 4rem);
@@ -200,6 +179,7 @@
     @media (max-width: 850px) {
       .about-grid { grid-template-columns: 1fr; gap: 2rem; }
       .site-title { font-size: 2.5rem; }
+      .navbar { gap: 1rem; font-size: 0.9rem; }
     }
   </style>
 </head>
@@ -263,39 +243,14 @@
   </div>
 
   <script>
-    const token = localStorage.getItem("charityToken");
-    if (!token) window.location.href = "login.html";
-
-    window.onload = async () => {
-      const userEmail = localStorage.getItem("userEmail") || "User";
-      document.getElementById("profileEmail").textContent = userEmail;
-    };
-    // 1. Tagline Rotation
-    const taglines = [
+    requireLogin();
+    initUserProfileChip();
+    initTagline("tagline", [
       "Our mission, vision and story.",
       "Bringing kindness to every corner.",
       "Be the change you want to see.",
       "Together we make a difference."
-    ];
-    let index = 0;
-    const taglineElement = document.getElementById('tagline');
-
-    function rotateTagline() {
-      taglineElement.classList.remove('show');
-      setTimeout(() => {
-        index = (index + 1) % taglines.length;
-        taglineElement.textContent = taglines[index];
-        taglineElement.classList.add('show');
-      }, 500);
-    }
-    taglineElement.classList.add('show');
-    setInterval(rotateTagline, 4000);
-
-    // 2. Logout Logic
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      localStorage.clear();
-      window.location.href = "login.html";
-    });
+    ]);
   </script>
 </body>
 </html>

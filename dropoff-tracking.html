@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Logistics Monitor | Charity Flow</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/common.js"></script>
   <style>
     :root {
       --primary-color: #1d3557;
@@ -96,7 +98,7 @@
       z-index: 1000;
     }
 
-    .nav-links { display: flex; gap: 40px; align-items: center; }
+    .nav-links { display: flex; gap: 40px; align-items: center; flex-wrap: wrap; justify-content: center; }
     .navbar a { text-decoration: none; font-weight: 500; color: var(--primary-color); transition: 0.3s; }
     .navbar a:hover, .navbar a.active { color: var(--secondary-color); }
 
@@ -163,7 +165,7 @@
 
     .active-step { color: var(--primary-color); }
 
-    .btn-group { display: flex; gap: 10px; }
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
 
     .action-btn {
       padding: 10px 18px;
@@ -188,6 +190,10 @@
       justify-content: center;
       gap: 15px;
       margin-bottom: 30px;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+      padding: 4px;
     }
     .toggle-btn {
       padding: 10px 25px;
@@ -210,10 +216,18 @@
       padding-top: 15px;
       border-top: 1px dashed #ddd;
     }
-    .inline-form.show { display: flex; gap: 10px; align-items: center; }
-    .inline-form input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
-    .inline-form button { padding: 10px 15px; border-radius: 8px; background: var(--secondary-color); color: white; border: none; cursor: pointer; }
+    .inline-form.show { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .inline-form input { flex: 1; min-width: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+    .inline-form button { padding: 10px 15px; border-radius: 8px; background: var(--secondary-color); color: white; border: none; cursor: pointer; font-weight: 600; }
 
+    @media (max-width: 768px) {
+      .navbar { height: auto; padding: 12px 10px; }
+      .nav-links { gap: 15px; }
+      .site-title { font-size: 2.8rem; }
+      .card-header { flex-direction: column; gap: 15px; }
+      .btn-group { width: 100%; }
+      .action-btn { flex: 1; text-align: center; }
+    }
   </style>
 </head>
 <body>
@@ -234,14 +248,14 @@
       <a href="manage-users.html">Directory</a>
       <a href="dropoff-tracking.html" class="active">Logistics</a>
       <a href="reports-history.html">Reports</a>
-      <button class="logout-nav" onclick="localStorage.clear(); location.href='login.html'">Logout</button>
+      <button class="logout-nav" id="logoutBtn">Logout</button>
     </div>
   </div>
 
   <div class="content">
-    <div class="tab-toggle">
-      <button class="toggle-btn active" id="btnActive" onclick="setTab('active')">Active Shipments</button>
-      <button class="toggle-btn" id="btnCompleted" onclick="setTab('completed')">Completed Deliveries</button>
+    <div class="tab-toggle" role="tablist">
+      <button class="toggle-btn active" id="btnActive" role="tab" aria-selected="true" onclick="setTab('active')">Active Shipments</button>
+      <button class="toggle-btn" id="btnCompleted" role="tab" aria-selected="false" onclick="setTab('completed')">Completed Deliveries</button>
     </div>
     <div id="logisticsContainer">
       <!-- Dynamic Logistics Rendered Here -->
@@ -249,25 +263,9 @@
   </div>
 
   <script>
-    // Tagline rotation
-    const taglines = ["Logistics Monitor", "Error-Free Tracking", "Verifying Shipments", "Final Mile Delivery"];
-    let idx = 0;
-    const tagEl = document.getElementById('tagline');
-    function rotate() {
-      tagEl.classList.remove('show');
-      setTimeout(() => {
-        idx = (idx + 1) % taglines.length;
-        tagEl.textContent = taglines[idx];
-        tagEl.classList.add('show');
-      }, 500);
-    }
-    tagEl.classList.add('show');
-    setInterval(rotate, 3000);
-
-    // Session guard
-    const token = localStorage.getItem('charityToken');
-    if (!token) window.location.href = "login.html";
-    else if (localStorage.getItem('userRole') !== "admin") window.location.href = "frontend.html";
+    requireAdmin();
+    initTagline("tagline", ["Logistics Monitor", "Error-Free Tracking", "Verifying Shipments", "Final Mile Delivery"]);
+    initAdminProfileChip();
 
     let allEntries = [];
     let currentTab = 'active';
@@ -275,78 +273,42 @@
     function setTab(tab) {
       currentTab = tab;
       document.getElementById('btnActive').classList.toggle('active', tab === 'active');
+      document.getElementById('btnActive').setAttribute('aria-selected', tab === 'active');
       document.getElementById('btnCompleted').classList.toggle('active', tab === 'completed');
+      document.getElementById('btnCompleted').setAttribute('aria-selected', tab === 'completed');
       renderLogistics();
     }
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      const userEmail = localStorage.getItem("userEmail") || "Admin";
-      document.getElementById("profileEmail").textContent = userEmail;
-      
-      const profileChip = document.getElementById("profileChip");
-      const profileDropdown = document.getElementById("profileDropdown");
-      
-      profileChip.addEventListener("click", (e) => {
-        e.stopPropagation();
-        profileDropdown.classList.toggle("show");
-      });
-      
-      document.addEventListener("click", (e) => {
-        if (!profileChip.contains(e.target) && !profileDropdown.contains(e.target)) {
-          profileDropdown.classList.remove("show");
-        }
-      });
-
+    async function loadLogisticsData() {
       const container = document.getElementById('logisticsContainer');
-      container.innerHTML = "<p style='text-align:center;'>Loading...</p>";
+      renderLoading(container, "Loading shipments...");
       
       try {
-        // Fetch Profile Activity Dropdown
-        const actRes = await fetch("http://localhost:8000/admin/my-activity", { headers: { 'Authorization': `Bearer ${token}` }});
-        if (actRes.ok) {
-          const acts = await actRes.json();
-          if (acts.length === 0) {
-            profileDropdown.innerHTML = '<div class="dropdown-item">No recent activity</div>';
-          } else {
-            profileDropdown.innerHTML = acts.map(act => `
-              <div class="dropdown-item">
-                <div><strong>${act.action}</strong>: ${act.details}</div>
-                <div class="time">${act.timestamp}</div>
-              </div>
-            `).join('');
-          }
-        }
-
-        const res = await fetch("http://localhost:8000/logistics", {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await apiFetch("/logistics");
 
         if (res.ok) {
           allEntries = await res.json();
           renderLogistics();
-        } else if (res.status === 401) {
-          localStorage.clear();
-          window.location.href = "login.html";
         } else {
-          container.innerHTML = "<p style='text-align:center; color:red;'>Failed to load logistics data.</p>";
+          renderError(container, "Failed to load logistics data. Please check your connection.", loadLogisticsData);
         }
       } catch (err) {
         console.error(err);
-        container.innerHTML = "<p style='text-align:center; color:red;'>Failed to connect to server.</p>";
+        renderError(container, "Failed to connect to server. Please retry.", loadLogisticsData);
       }
-    });
+    }
 
     function renderLogistics() {
       const container = document.getElementById('logisticsContainer');
       container.innerHTML = "";
       
-      const filtered = allEntries.filter(e => {
+      const filtered = (allEntries || []).filter(e => {
         if (currentTab === 'active') return e.stage === 'picked_up' || e.stage === 'at_hub';
         return e.stage === 'delivered';
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `<p style='text-align:center; color:#666;'>No ${currentTab} shipments at the moment.</p>`;
+        renderEmpty(container, `No ${currentTab} shipments at the moment.`);
         return;
       }
 
@@ -357,33 +319,33 @@
 
         const card = document.createElement('div');
         card.className = 'monitor-card';
-        card.id = `card-${e.donation_id}`;
+        card.id = `card-${escapeHtml(e.donation_id)}`;
         card.innerHTML = `
           <div class="card-header">
             <div class="item-details">
-              <h3>${e.category || 'Donation Item'}</h3>
-              <p><strong>Donor:</strong> ${e.donor_email || 'N/A'} | <strong>NGO:</strong> ${e.ngo_name || e.assigned_ngo || 'N/A'}</p>
-              <p><strong>Drop-off Location:</strong> ${e.location || 'N/A'}</p>
-              ${e.description ? `<p class="description">"${e.description}"</p>` : ''}
+              <h3>${escapeHtml(e.category || 'Donation Item')}</h3>
+              <p><strong>Donor:</strong> ${escapeHtml(e.donor_email || 'N/A')} | <strong>NGO:</strong> ${escapeHtml(e.ngo_name || e.assigned_ngo || 'N/A')}</p>
+              <p><strong>Drop-off Location:</strong> ${escapeHtml(e.location || 'N/A')}</p>
+              ${e.description ? `<p class="description">"${escapeHtml(e.description)}"</p>` : ''}
             </div>
             <div class="btn-group">
               <button 
                 class="action-btn ${isHub ? 'undo-state' : ''}" 
-                id="hub-${e.donation_id}" 
-                onclick="toggleHub('${e.donation_id}')"
+                id="hub-${escapeHtml(e.donation_id)}" 
+                onclick="toggleHub('${escapeHtml(e.donation_id)}')"
                 style="display: ${isDeliv ? 'none' : 'block'}">
                 ${isHub ? "Undo Hub" : "Mark at Hub"}
               </button>
               <button 
                 class="action-btn primary" 
-                id="del-${e.donation_id}" 
-                onclick="updateStatus('${e.donation_id}', 'delivered')"
+                id="del-${escapeHtml(e.donation_id)}" 
+                onclick="updateStatus('${escapeHtml(e.donation_id)}', 'delivered')"
                 ${isDeliv || !isHub ? 'disabled' : ''}
                 style="display: ${isDeliv ? 'none' : 'block'}">
                 Confirm Delivery
               </button>
               ${isDeliv ? `
-              <button class="action-btn cancel-delivery-btn" onclick="document.getElementById('cancel-form-${e.donation_id}').classList.toggle('show')">
+              <button class="action-btn cancel-delivery-btn" onclick="document.getElementById('cancel-form-${escapeHtml(e.donation_id)}').classList.toggle('show')">
                 Cancel Delivery
               </button>
               ` : ''}
@@ -392,18 +354,18 @@
 
           <div class="tracker-container">
             <div class="track-bg">
-              <div class="track-fill" id="fill-${e.donation_id}" style="width: ${fillWidth}; ${isDeliv ? 'background: var(--success-color);' : ''}"></div>
+              <div class="track-fill" id="fill-${escapeHtml(e.donation_id)}" style="width: ${fillWidth}; ${isDeliv ? 'background: var(--success-color);' : ''}"></div>
             </div>
             <div class="step-markers">
               <span class="active-step">Donor Picked Up</span>
-              <span id="step-${e.donation_id}-2" class="${isHub || isDeliv ? 'active-step' : ''}">At Sorting Hub</span>
-              <span id="step-${e.donation_id}-3" class="${isDeliv ? 'active-step' : ''}">NGO Received</span>
+              <span id="step-${escapeHtml(e.donation_id)}-2" class="${isHub || isDeliv ? 'active-step' : ''}">At Sorting Hub</span>
+              <span id="step-${escapeHtml(e.donation_id)}-3" class="${isDeliv ? 'active-step' : ''}">NGO Received</span>
             </div>
           </div>
           
-          <div class="inline-form" id="cancel-form-${e.donation_id}">
-            <input type="text" id="cancel-reason-${e.donation_id}" placeholder="Reason for cancellation..." />
-            <button onclick="cancelDelivery('${e.donation_id}')">Confirm Cancel</button>
+          <div class="inline-form" id="cancel-form-${escapeHtml(e.donation_id)}">
+            <input type="text" id="cancel-reason-${escapeHtml(e.donation_id)}" placeholder="Reason for cancellation..." />
+            <button onclick="cancelDelivery('${escapeHtml(e.donation_id)}')">Confirm Cancel</button>
           </div>
         `;
         container.appendChild(card);
@@ -417,24 +379,21 @@
       const newStage = entry.stage === 'at_hub' ? 'undo_hub' : 'at_hub';
       
       try {
-        const res = await fetch(`http://localhost:8000/logistics/${id}`, {
+        const res = await apiFetch(`/logistics/${encodeURIComponent(id)}`, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ stage: newStage })
+          body: { stage: newStage }
         });
         
         if (res.ok) {
           entry.stage = newStage === 'undo_hub' ? 'picked_up' : 'at_hub';
           renderLogistics();
+          showToast(newStage === 'undo_hub' ? "Reverted back to picked up." : "Marked as At Sorting Hub.", "info");
         } else {
           const result = await res.json().catch(() => ({}));
-          alert(result.detail || "Failed to update stage.");
+          showToast(result.detail || "Failed to update stage.", "error");
         }
       } catch (err) {
-        alert("Failed to connect to server.");
+        showToast("Failed to connect to server.", "error");
       }
     }
 
@@ -442,62 +401,57 @@
       if (stage === 'delivered' && !confirm("Confirm this delivery? This will finalize the logistics record.")) return;
 
       try {
-        const res = await fetch(`http://localhost:8000/logistics/${id}`, {
+        const res = await apiFetch(`/logistics/${encodeURIComponent(id)}`, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ stage })
+          body: { stage }
         });
 
         if (res.ok) {
           const entry = allEntries.find(e => e.donation_id === id);
-          if(entry) entry.stage = stage;
+          if (entry) entry.stage = stage;
           renderLogistics();
-        } else if (res.status === 401) {
-          localStorage.clear();
-          window.location.href = "login.html";
+          showToast("Delivery confirmed successfully!", "success");
         } else {
           const result = await res.json().catch(() => ({}));
-          alert(result.detail || "Failed to update status.");
+          showToast(result.detail || "Failed to update status.", "error");
         }
       } catch (err) {
         console.error(err);
-        alert("Failed to connect to server.");
+        showToast("Failed to connect to server.", "error");
       }
     }
     
     async function cancelDelivery(id) {
       const reasonInput = document.getElementById(`cancel-reason-${id}`);
-      const reason = reasonInput.value.trim();
-      if(!reason) {
-        alert("Please provide a reason.");
+      const reason = reasonInput ? reasonInput.value.trim() : "";
+      if (!reason) {
+        showToast("Please provide a reason.", "warning");
         return;
       }
       
       try {
-        const res = await fetch(`http://localhost:8000/logistics/${id}/cancel-delivery`, {
+        const res = await apiFetch(`/logistics/${encodeURIComponent(id)}/cancel-delivery`, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ reason })
+          body: { reason }
         });
         
         if (res.ok) {
           const entry = allEntries.find(e => e.donation_id === id);
-          if(entry) entry.stage = 'picked_up';
+          if (entry) entry.stage = 'picked_up';
           setTab('active');
+          showToast("Delivery cancelled and shipment reverted to active.", "info");
         } else {
           const result = await res.json().catch(() => ({}));
-          alert(result.detail || "Failed to cancel delivery.");
+          showToast(result.detail || "Failed to cancel delivery.", "error");
         }
-      } catch(err) {
-        alert("Failed to connect to server.");
+      } catch (err) {
+        showToast("Failed to connect to server.", "error");
       }
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadLogisticsData();
+    });
   </script>
 </body>
 </html>
