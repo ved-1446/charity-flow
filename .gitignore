@@ -1,8 +1,28 @@
+# Environment variables
 .env
+*.env
+!.env.example
+
+# Virtual environments
+venv/
+.venv/
+**/venv/
+**/.venv/
+
+# Python cache & compiled files
 __pycache__/
+*.py[cod]
+*$py.class
 *.pyc
+
+# Dependencies
 node_modules/
 .vscode/
+
+# Uploads & User data
+uploads/
 charityflow-backend/uploads/
-BACKSTREET TECHRUSH CHARITY FLOW.zip
-SINGLE PROMPT.pdf
+
+# Archives & Documents
+*.zip
+*.pdf

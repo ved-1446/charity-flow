@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 from middleware.admin_only import admin_only
+from utils.serializers import serialize_date
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -9,8 +10,13 @@ async def get_activity(request: Request, user: dict = Depends(admin_only)):
     cursor = db.activity_logs.find().sort("timestamp", -1)
     logs = []
     async for entry in cursor:
-        entry["_id"] = str(entry["_id"])
-        logs.append(entry)
+        logs.append({
+            "_id": str(entry.get("_id", "")),
+            "user_email": entry.get("user_email", ""),
+            "action": entry.get("action", ""),
+            "details": entry.get("details", ""),
+            "timestamp": serialize_date(entry.get("timestamp"))
+        })
     return logs
 
 @router.get("/spam")
@@ -19,8 +25,15 @@ async def get_spam_donations(request: Request, user: dict = Depends(admin_only))
     cursor = db.donations.find({"status": "rejected"}).sort("created_at", -1)
     spams = []
     async for entry in cursor:
-        entry["_id"] = str(entry["_id"])
-        spams.append(entry)
+        spams.append({
+            "_id": str(entry.get("_id", "")),
+            "donor_email": entry.get("donor_email", ""),
+            "user_email": entry.get("donor_email", ""),
+            "category": entry.get("category", ""),
+            "description": entry.get("description", ""),
+            "status": entry.get("status", "rejected"),
+            "created_at": serialize_date(entry.get("created_at"))
+        })
     return spams
 
 @router.get("/contact")
@@ -29,23 +42,15 @@ async def get_contact_messages(request: Request, user: dict = Depends(admin_only
     cursor = db.contact_messages.find().sort("received_at", -1)
     contacts = []
     async for entry in cursor:
-        received_at = entry.get("received_at")
-        if hasattr(received_at, "isoformat"):
-            received_at_str = received_at.isoformat()
-        elif hasattr(received_at, "strftime"):
-            received_at_str = received_at.strftime("%Y-%m-%d %H:%M")
-        else:
-            received_at_str = str(received_at) if received_at else ""
-            
         contacts.append({
             "message_id": str(entry.get("_id", "")),
             "name": entry.get("name", ""),
             "email": entry.get("email", ""),
             "message": entry.get("message", ""),
-            "received_at": received_at_str,
+            "received_at": serialize_date(entry.get("received_at")),
             "status": entry.get("status", "pending"),
             "reply": entry.get("reply", ""),
             "replied_by": entry.get("replied_by", ""),
-            "replied_at": entry.get("replied_at", "")
+            "replied_at": serialize_date(entry.get("replied_at"))
         })
     return contacts

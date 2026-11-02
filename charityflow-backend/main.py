@@ -1,13 +1,17 @@
 import os
+import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, status
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load shared config (fails fast if JWT_SECRET or MONGO_URI missing)
+from config import MONGO_URI, CORS_ORIGINS, CORS_ALLOW_CREDENTIALS, PORT
+from db_indexes import create_indexes
+
+logger = logging.getLogger("charityflow")
 
 # Global database client
 mongodb_client = None
@@ -15,21 +19,25 @@ mongodb_client = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global mongodb_client
-    mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/charityflow")
-    mongodb_client = AsyncIOMotorClient(mongo_uri)
+    mongodb_client = AsyncIOMotorClient(MONGO_URI)
     app.state.db = mongodb_client.get_default_database()
-    print("Connected to MongoDB")
+    logger.info("Connected to MongoDB")
+
+    # Create database indexes safely and idempotently
+    await create_indexes(app.state.db)
+
     yield
+
     mongodb_client.close()
-    print("Disconnected from MongoDB")
+    logger.info("Disconnected from MongoDB")
 
 app = FastAPI(title="Charity Flow API", lifespan=lifespan)
 
 # Setup CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=CORS_ALLOW_CREDENTIALS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -42,6 +50,25 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 @app.get("/")
 async def root():
     return {"message": "Welcome to Charity Flow API"}
+
+@app.get("/health")
+async def health_check():
+    global mongodb_client
+    try:
+        if mongodb_client is None:
+            return JSONResponse(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                content={"status": "error", "db": "down"}
+            )
+        # Ping MongoDB
+        await mongodb_client.admin.command("ping")
+        return {"status": "ok", "db": "up"}
+    except Exception as e:
+        logger.error("Health check ping failed: %s", e)
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"status": "error", "db": "down"}
+        )
 
 from routes.auth import router as auth_router
 from routes.donations import router as donations_router
@@ -61,4 +88,4 @@ app.include_router(reports_router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=PORT)

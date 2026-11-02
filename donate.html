@@ -409,7 +409,14 @@
         this.reset();
         fileList.textContent = "No files selected";
       } else {
-        const errorDetail = result.detail || response.statusText || 'Failed to submit donation.';
+        let errorDetail = 'Failed to submit donation.';
+        if (Array.isArray(result.detail)) {
+          errorDetail = result.detail.map(d => (d.loc ? d.loc[d.loc.length - 1] + ': ' : '') + d.msg).join(', ');
+        } else if (result.detail) {
+          errorDetail = result.detail;
+        } else if (response.statusText) {
+          errorDetail = response.statusText;
+        }
         showInlineMessage(`Error: ${errorDetail}`, true);
       }
     } catch (err) {

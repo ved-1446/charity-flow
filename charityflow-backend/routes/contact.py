@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, Request, Depends, HTTPException
 from pydantic import BaseModel
 from middleware.admin_only import admin_only
@@ -5,18 +6,22 @@ from middleware.auth import get_current_user
 from models.contact_message import ContactMessageCreate, ContactMessageDB
 from models.activity_log import ActivityLogDB
 from bson import ObjectId
+from utils.rate_limiter import rate_limit_contact
+from utils.serializers import serialize_date
 
 router = APIRouter(prefix="/contact", tags=["contact"])
 
-@router.post("")
+@router.post("", dependencies=[Depends(rate_limit_contact)])
 async def receive_contact(message: ContactMessageCreate, request: Request):
     db = request.app.state.db
+    now = datetime.now(timezone.utc)
     new_message = ContactMessageDB(**message.model_dump())
     message_dict = new_message.model_dump()
+    message_dict["received_at"] = now
     message_dict["status"] = "pending"
     message_dict["reply"] = ""
     message_dict["replied_by"] = ""
-    message_dict["replied_at"] = ""
+    message_dict["replied_at"] = None
     await db.contact_messages.insert_one(message_dict)
     return {"message": "Message received. We will get back to you shortly."}
 
@@ -24,42 +29,20 @@ async def receive_contact(message: ContactMessageCreate, request: Request):
 @router.get("/my-messages")
 async def get_my_messages(request: Request, user: dict = Depends(get_current_user)):
     try:
-        print(f"[DEBUG] Fetching messages for user: {user['email']}")
         db = request.app.state.db
         cursor = db.contact_messages.find({"email": user["email"]}).sort("received_at", -1)
         messages = []
         async for doc in cursor:
-            # Build clean dictionary
-            received_at = doc.get("received_at")
-            try:
-                if received_at and hasattr(received_at, "isoformat"):
-                    received_at_str = received_at.isoformat()
-                elif received_at and hasattr(received_at, "strftime"):
-                    received_at_str = received_at.strftime("%Y-%m-%d %H:%M")
-                else:
-                    received_at_str = str(received_at) if received_at else ""
-            except Exception:
-                received_at_str = ""
-
-            replied_at = doc.get("replied_at")
-            try:
-                if replied_at and hasattr(replied_at, "strftime"):
-                    replied_at_str = replied_at.strftime("%Y-%m-%d %H:%M")
-                else:
-                    replied_at_str = str(replied_at) if replied_at else ""
-            except Exception:
-                replied_at_str = ""
-
             clean_msg = {
                 "message_id": str(doc.get("_id", "")),
                 "name": str(doc.get("name", "") or ""),
                 "email": str(doc.get("email", "") or ""),
                 "message": str(doc.get("message", "") or ""),
-                "received_at": received_at_str,
+                "received_at": serialize_date(doc.get("received_at")),
                 "status": str(doc.get("status", "pending") or "pending"),
                 "reply": str(doc.get("reply", "") or ""),
                 "replied_by": str(doc.get("replied_by", "") or ""),
-                "replied_at": replied_at_str
+                "replied_at": serialize_date(doc.get("replied_at"))
             }
             messages.append(clean_msg)
         return messages
@@ -73,6 +56,7 @@ class ReplyRequest(BaseModel):
 @router.post("/{message_id}/reply")
 async def reply_to_contact(message_id: str, payload: ReplyRequest, request: Request, user: dict = Depends(admin_only)):
     db = request.app.state.db
+    now = datetime.now(timezone.utc)
     try:
         msg_oid = ObjectId(message_id)
     except Exception:
@@ -84,7 +68,7 @@ async def reply_to_contact(message_id: str, payload: ReplyRequest, request: Requ
             "$set": {
                 "reply": payload.reply,
                 "replied_by": user["email"],
-                "replied_at": __import__('datetime').datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
+                "replied_at": now,  # Store real datetime object
                 "status": "replied"
             }
         }
@@ -95,7 +79,8 @@ async def reply_to_contact(message_id: str, payload: ReplyRequest, request: Requ
     log = ActivityLogDB(
         user_email=user["email"],
         action="contact_replied",
-        details=f"Replied to contact message {message_id}"
+        details=f"Replied to contact message {message_id}",
+        timestamp=now
     )
     await db.activity_logs.insert_one(log.model_dump())
     return {"message": "Reply saved successfully"}
@@ -103,6 +88,7 @@ async def reply_to_contact(message_id: str, payload: ReplyRequest, request: Requ
 @router.patch("/{message_id}/flag")
 async def flag_contact(message_id: str, request: Request, user: dict = Depends(admin_only)):
     db = request.app.state.db
+    now = datetime.now(timezone.utc)
     try:
         msg_oid = ObjectId(message_id)
     except Exception:
@@ -123,7 +109,8 @@ async def flag_contact(message_id: str, request: Request, user: dict = Depends(a
     log = ActivityLogDB(
         user_email=user["email"],
         action="contact_flagged",
-        details=f"Flagged contact message {message_id}"
+        details=f"Flagged contact message {message_id}",
+        timestamp=now
     )
     await db.activity_logs.insert_one(log.model_dump())
     return {"message": "Message flagged"}

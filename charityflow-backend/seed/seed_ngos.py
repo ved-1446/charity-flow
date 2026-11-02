@@ -1,18 +1,15 @@
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Ensure backend root is on sys.path
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
 
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 from models.ngo import NGODB
-from dotenv import load_dotenv
-
-load_dotenv()
-
-async def get_db():
-    uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/charityflow")
-    client = AsyncIOMotorClient(uri)
-    return client.get_default_database()
+from config import MONGO_URI
 
 ngos_data = [
   { "name": "Helping Hands Trust", "email": "helpinghands@demo.ngo",
@@ -32,16 +29,30 @@ ngos_data = [
     "reason": "Hygiene and welfare drive for shelter homes", "status": "verified" }
 ]
 
-async def seed():
-    db = await get_db()
+async def seed_ngos(db=None):
+    client = None
+    if db is None:
+        client = AsyncIOMotorClient(MONGO_URI)
+        db = client.get_default_database()
+
+    seeded_count = 0
+    skipped_count = 0
+
     for data in ngos_data:
+        email = data["email"].strip().lower()
+        # Idempotent: skip existing NGO, never duplicate
+        existing = await db.ngos.find_one({"email": email})
+        if existing:
+            skipped_count += 1
+            continue
+
         ngo = NGODB(**data)
-        await db.ngos.update_one(
-            {"email": ngo.email},
-            {"$set": ngo.model_dump()},
-            upsert=True
-        )
-    print("Seed complete: NGOs inserted.")
+        await db.ngos.insert_one(ngo.model_dump())
+        seeded_count += 1
+
+    print(f"Seed NGOs complete: {seeded_count} inserted, {skipped_count} skipped.")
+    if client:
+        client.close()
 
 if __name__ == "__main__":
-    asyncio.run(seed())
+    asyncio.run(seed_ngos())

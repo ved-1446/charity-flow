@@ -1,20 +1,37 @@
 import os
-import shutil
 import uuid
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Request
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Request, status
 from middleware.auth import get_current_user
 from middleware.admin_only import admin_only
 from models.donation import DonationDB
 from models.activity_log import ActivityLogDB
 from bson import ObjectId
 from pydantic import BaseModel
+from utils.serializers import serialize_date
 
 router = APIRouter(tags=["donations"])
 
-ALLOWED_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
-MAX_IMAGE_SIZE = 5 * 1024 * 1024
+MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
 MAX_IMAGE_COUNT = 5
+
+def detect_image_type(data: bytes) -> Optional[str]:
+    """
+    Inspects real magic bytes (file signature) of image data.
+    Returns extension string ('.jpg', '.png', '.webp') or None if invalid.
+    """
+    if len(data) < 12:
+        return None
+    # JPEG/JPG: FF D8 FF
+    if data.startswith(b"\xff\xd8\xff"):
+        return ".jpg"
+    # PNG: 89 50 4E 47 0D 0A 1A 0A
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return ".png"
+    # WEBP: RIFF....WEBP
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return ".webp"
+    return None
 
 @router.post("/donate")
 async def create_donation(
@@ -22,65 +39,74 @@ async def create_donation(
     location: str = Form(...),
     category: str = Form(...),
     description: str = Form(...),
-    donorEmail: Optional[str] = Form(None),
     photos: List[UploadFile] = File(...),
     user: dict = Depends(get_current_user)
 ):
     db = request.app.state.db
     upload_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
     saved_photos = []
+
+    if not photos or len(photos) == 0:
+        raise HTTPException(status_code=400, detail="At least one photo is required")
 
     if len(photos) > MAX_IMAGE_COUNT:
         raise HTTPException(status_code=400, detail=f"Maximum {MAX_IMAGE_COUNT} files allowed")
 
     for photo in photos:
-        ext = os.path.splitext(photo.filename)[1].lower()
-        if ext not in ALLOWED_IMAGE_EXTS:
-            raise HTTPException(status_code=400, detail=f"Invalid file type: {ext}. Only JPG, PNG, WEBP allowed")
+        content = await photo.read()
         
-        photo.file.seek(0, os.SEEK_END)
-        size = photo.file.tell()
-        photo.file.seek(0)
-        if size > MAX_IMAGE_SIZE:
+        # Check size
+        if len(content) > MAX_IMAGE_SIZE:
             raise HTTPException(status_code=400, detail="Each photo must be smaller than 5 MB")
+        
+        # Check magic bytes
+        ext = detect_image_type(content)
+        if not ext:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid file signature. Only real JPG, PNG, and WEBP image files are allowed."
+            )
 
         new_filename = f"{uuid.uuid4()}{ext}"
         filepath = os.path.join(upload_dir, new_filename)
         with open(filepath, "wb") as buffer:
-            shutil.copyfileobj(photo.file, buffer)
+            buffer.write(content)
         saved_photos.append(f"uploads/{new_filename}")
-        
-    actual_donor_email = user.get("email") or donorEmail or ""
+
+    # Use email directly from authenticated user token
+    donor_email = user["email"]
+
     donation = DonationDB(
-        donor_email=actual_donor_email,
+        donor_email=donor_email,
         location=location,
         category=category,
         description=description,
         photos=saved_photos,
         status="pending"
     )
-    
+
     result = await db.donations.insert_one(donation.model_dump())
     donation_id = str(result.inserted_id)
-    
+
     log = ActivityLogDB(
-        user_email=actual_donor_email,
+        user_email=donor_email,
         action="donation",
         details=f"New donation submitted with {len(saved_photos)} photos"
     )
     await db.activity_logs.insert_one(log.model_dump())
-    
+
     return {"message": "Donation submitted successfully", "donation_id": donation_id}
 
 @router.get("/donations")
-async def get_donations(request: Request, user: dict = Depends(get_current_user)):
+async def get_donations(request: Request, user: dict = Depends(admin_only)):
     db = request.app.state.db
     cursor = db.donations.find().sort("created_at", -1)
     donations = []
     async for document in cursor:
         document["_id"] = str(document["_id"])
-        if "created_at" in document and hasattr(document["created_at"], "isoformat"):
-            document["created_at"] = document["created_at"].isoformat()
+        if "created_at" in document:
+            document["created_at"] = serialize_date(document["created_at"])
         donations.append(document)
     return donations
 
@@ -93,9 +119,17 @@ async def get_donation(id: str, request: Request, user: dict = Depends(get_curre
         raise HTTPException(status_code=400, detail="Invalid ID format")
     if not doc:
         raise HTTPException(status_code=404, detail="Donation not found")
+
+    # Only admin or the donor who owns the donation can access
+    if user.get("role") != "admin" and doc.get("donor_email") != user.get("email"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden: You do not own this donation"
+        )
+
     doc["_id"] = str(doc["_id"])
-    if "created_at" in doc and hasattr(doc["created_at"], "isoformat"):
-        doc["created_at"] = doc["created_at"].isoformat()
+    if "created_at" in doc:
+        doc["created_at"] = serialize_date(doc["created_at"])
     return doc
 
 class StatusUpdate(BaseModel):
@@ -111,10 +145,10 @@ async def update_status(id: str, payload: StatusUpdate, request: Request, user: 
         )
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid ID format")
-        
+
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Donation not found or status already set")
-        
+
     log = ActivityLogDB(
         user_email=user["email"],
         action="rejection" if payload.status == "rejected" else "allocation" if payload.status == "allocated" else "update",
@@ -122,4 +156,3 @@ async def update_status(id: str, payload: StatusUpdate, request: Request, user: 
     )
     await db.activity_logs.insert_one(log.model_dump())
     return {"message": "Status updated successfully"}
-

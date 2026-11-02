@@ -99,18 +99,7 @@ select Open with Live Server
 
 ## Login Credentials
 
-ADMIN LOGINS (redirects to admin dashboard)
-admin@charityflow.org      Password: Admin@1234
-admin2@charityflow.org     Password: Admin@5678
-admin3@charityflow.org     Password: Admin@9012
-
-DONOR LOGINS (redirects to user dashboard)
-donor@charityflow.org      Password: Donor@1234
-donor2@charityflow.org     Password: Donor@5678
-donor3@charityflow.org     Password: Donor@9012
-donor4@charityflow.org     Password: Donor@3456
-donor5@charityflow.org     Password: Donor@7890
-donor6@charityflow.org     Password: Donor@2345
+Demo accounts are created by the seed script (`seed/seed_users.py` or `seed/seed_all.py`).
 
 ---
 
