@@ -354,12 +354,11 @@
 
       donations.forEach(d => {
         let photoPath = (d.photos && d.photos.length > 0) ? d.photos[0] : null;
-        let imgUrl = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=400";
-        if (photoPath) {
-          photoPath = photoPath.replace(/^uploads[\/\\]/, "");
-          const base = (window.API_BASE || "").replace(/\/+$/, "");
-          imgUrl = `${base}/uploads/${encodeURIComponent(photoPath)}`;
-        }
+        let imgUrl = typeof getPhotoUrl === "function" 
+          ? getPhotoUrl(photoPath) 
+          : (photoPath && (photoPath.startsWith("http://") || photoPath.startsWith("https://")) 
+              ? photoPath 
+              : ((photoPath ? (window.API_BASE || "").replace(/\/+$/, "") + "/uploads/" + encodeURIComponent(photoPath.replace(/^uploads[\/\\]/, "")) : "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=400")));
         const isAccepted = d.status === 'accepted';
         
         const card = document.createElement('div');

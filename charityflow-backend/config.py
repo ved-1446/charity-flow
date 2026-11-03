@@ -1,8 +1,12 @@
 import os
 from dotenv import load_dotenv
 
-# Load .env file
-load_dotenv()
+# Load .env file (checks backend directory first, then current working directory)
+_backend_env = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+if os.path.exists(_backend_env):
+    load_dotenv(dotenv_path=_backend_env)
+else:
+    load_dotenv()
 
 # JWT Secret: must be provided, no fallback allowed
 JWT_SECRET = os.getenv("JWT_SECRET")
@@ -39,6 +43,12 @@ else:
 
 # Server Port
 PORT = int(os.getenv("PORT", "8000"))
+
+# Proxy Trust: when true, rate limiter respects X-Forwarded-For first IP
+TRUST_PROXY = os.getenv("TRUST_PROXY", "false").lower() == "true"
+
+# Optional Cloudinary Storage: if configured, uploads save to Cloudinary; otherwise local /uploads
+CLOUDINARY_URL = os.getenv("CLOUDINARY_URL", "").strip()
 
 # Seed Passwords
 SEED_ADMIN_PASSWORD = os.getenv("SEED_ADMIN_PASSWORD")

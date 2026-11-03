@@ -2,6 +2,7 @@ import time
 from collections import defaultdict
 from typing import Dict, List
 from fastapi import Request, HTTPException, status
+from config import TRUST_PROXY
 
 class InMemoryRateLimiter:
     def __init__(self, max_requests: int, window_seconds: int = 60, action_name: str = "requests"):
@@ -27,9 +28,10 @@ register_limiter = InMemoryRateLimiter(max_requests=5, window_seconds=60, action
 contact_limiter = InMemoryRateLimiter(max_requests=5, window_seconds=60, action_name="contact messages")
 
 def get_client_ip(request: Request) -> str:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    if TRUST_PROXY:
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
 
 def rate_limit_login(request: Request):

@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: charityflow
+    runtime: python
+    buildCommand: pip install -r charityflow-backend/requirements.txt
+    startCommand: cd charityflow-backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: TRUST_PROXY
+        value: "true"
+      - key: DEMO_MODE
+        value: "true"
+      - key: DEMO_DELIVERY_DELAY_SECONDS
+        value: "90"
+      - key: JWT_EXPIRE_HOURS
+        value: "8"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: CLOUDINARY_URL
+        sync: false
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
+      - key: SEED_DONOR_PASSWORD
+        sync: false

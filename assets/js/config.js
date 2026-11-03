@@ -1,7 +1,7 @@
 (function () {
-  var localHosts = ["localhost", "127.0.0.1"];
-  var isLocalDev = location.protocol === "file:" || (localHosts.indexOf(location.hostname) !== -1 && location.port !== "8000");
-  var defaultBase = isLocalDev ? "http://localhost:8000" : location.origin;
+  // In single-URL deployment, FastAPI serves the frontend from the same origin.
+  // When opened via file://, fall back to http://localhost:8000.
+  var defaultBase = location.protocol === "file:" ? "http://localhost:8000" : location.origin;
   var override = null;
   try {
     override = localStorage.getItem("cfApiBase");
@@ -10,4 +10,3 @@
   }
   window.API_BASE = (override && override.trim()) ? override.trim().replace(/\/+$/, "") : defaultBase;
 })();
-

@@ -1,5 +1,6 @@
 import os
 import uuid
+import logging
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Request, status
 from middleware.auth import get_current_user
@@ -9,6 +10,18 @@ from models.activity_log import ActivityLogDB
 from bson import ObjectId
 from pydantic import BaseModel
 from utils.serializers import serialize_date
+from config import CLOUDINARY_URL
+
+logger = logging.getLogger("charityflow")
+
+if CLOUDINARY_URL:
+    try:
+        import cloudinary
+        import cloudinary.uploader
+        cloudinary.config(cloudinary_url=CLOUDINARY_URL)
+        logger.info("Cloudinary photo storage enabled")
+    except Exception as e:
+        logger.warning("Failed to configure Cloudinary: %s", e)
 
 router = APIRouter(tags=["donations"])
 
@@ -68,11 +81,32 @@ async def create_donation(
                 detail="Invalid file signature. Only real JPG, PNG, and WEBP image files are allowed."
             )
 
-        new_filename = f"{uuid.uuid4()}{ext}"
-        filepath = os.path.join(upload_dir, new_filename)
-        with open(filepath, "wb") as buffer:
-            buffer.write(content)
-        saved_photos.append(f"uploads/{new_filename}")
+        if CLOUDINARY_URL:
+            try:
+                import cloudinary.uploader
+                upload_res = cloudinary.uploader.upload(
+                    content,
+                    folder="charityflow_donations",
+                    resource_type="image"
+                )
+                cloud_url = upload_res.get("secure_url") or upload_res.get("url")
+                if cloud_url:
+                    saved_photos.append(cloud_url)
+                else:
+                    raise ValueError("Cloudinary upload did not return a valid URL")
+            except Exception as e:
+                logger.error("Cloudinary upload failed: %s; falling back to local file storage", e)
+                new_filename = f"{uuid.uuid4()}{ext}"
+                filepath = os.path.join(upload_dir, new_filename)
+                with open(filepath, "wb") as buffer:
+                    buffer.write(content)
+                saved_photos.append(f"uploads/{new_filename}")
+        else:
+            new_filename = f"{uuid.uuid4()}{ext}"
+            filepath = os.path.join(upload_dir, new_filename)
+            with open(filepath, "wb") as buffer:
+                buffer.write(content)
+            saved_photos.append(f"uploads/{new_filename}")
 
     # Use email directly from authenticated user token
     donor_email = user["email"]

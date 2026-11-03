@@ -366,6 +366,17 @@
     checkStoredToast();
   });
 
+  // 5. Image URL Resolver (Handles Cloudinary full URLs and local uploads)
+  function getPhotoUrl(photoPath) {
+    if (!photoPath) return "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=400";
+    if (photoPath.startsWith("http://") || photoPath.startsWith("https://")) {
+      return photoPath;
+    }
+    var clean = photoPath.replace(/^uploads[\/\\]/, "");
+    var base = (window.API_BASE || "").replace(/\/+$/, "");
+    return base + "/uploads/" + encodeURIComponent(clean);
+  }
+
   // Export to window
   window.escapeHtml = escapeHtml;
   window.getToken = getToken;
@@ -375,6 +386,7 @@
   window.requireLogin = requireLogin;
   window.requireAdmin = requireAdmin;
   window.formatDate = formatDate;
+  window.getPhotoUrl = getPhotoUrl;
   window.apiFetch = apiFetch;
   window.showToast = showToast;
   window.renderLoading = renderLoading;
