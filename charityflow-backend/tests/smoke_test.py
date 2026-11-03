@@ -223,7 +223,7 @@ def run_tests():
 
     # 10b. Another donor views it -> 403
     try:
-        other_donor_tok = jwt.encode({"email": "donor2@charityflow.org", "role": "donor", "exp": datetime.now(timezone.utc) + timedelta(hours=1)}, JWT_SECRET, algorithm="HS256")
+        other_donor_tok = jwt.encode({"email": "other_donor@charityflow.org", "role": "donor", "exp": datetime.now(timezone.utc) + timedelta(hours=1)}, JWT_SECRET, algorithm="HS256")
         r = client.get(f"/donations/{created_donation_id}", headers={"Authorization": f"Bearer {other_donor_tok}"})
         st = "PASS" if r.status_code == 403 else "FAIL"
         record(test_id, "GET", "/donations/{id}", "donor (non-owner)", "403", str(r.status_code), st)

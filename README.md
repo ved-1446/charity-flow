@@ -27,14 +27,34 @@ To explore the platform without creating a new account, use the pre-seeded demo 
 
 ## Application Screenshots
 
-Visual walkthrough captures are maintained in the [`/docs/screenshots`](file:///c:/Users/Ved/OneDrive/Desktop/BACKSTREET%20TECHRUSH%20CHARITY%20FLOW/docs/screenshots) directory:
+### Donor Views
 
-1. **Login & Registration**: [`docs/screenshots/login.png`](docs/screenshots/login.png) — Clean split authentication portal with real-time field validation.
-2. **Donation Submission**: [`docs/screenshots/donate.png`](docs/screenshots/donate.png) — Donor submission workflow with drag-and-drop file upload and client/server magic-byte verification.
-3. **Donor Account Dashboard**: [`docs/screenshots/myaccount.png`](docs/screenshots/myaccount.png) — Real-time donation tracking cards, responsive status badges, and inquiry message replies.
-4. **Admin Overview Dashboard**: [`docs/screenshots/admin-dashboard.png`](docs/screenshots/admin-dashboard.png) — Platform metrics, real-time counters, daily UTC action counters, and quick management links.
-5. **Item Allocation & Inventory**: [`docs/screenshots/item-allocation.png`](docs/screenshots/item-allocation.png) — Interactive donation cards with review actions (accept/reject) and verified NGO assignment.
-6. **Logistics Dispatch Tracker**: [`docs/screenshots/dropoff-tracking.png`](docs/screenshots/dropoff-tracking.png) — Multi-stage shipment tracking pipeline with active/completed filters and simulated delivery transitions.
+#### 1. Donation Submission (`docs/screenshots/01-donate.png`)
+*Donors specify pickup drop-off location, category, upload verified image attachments, and provide an item description.*
+
+![Donation Submission](docs/screenshots/01-donate.png)
+
+#### 2. Donor Account Dashboard (`docs/screenshots/02-my-account.png`)
+*Personal dashboard displaying active donations with real-time status badges, drop-off history, and direct messaging tabs.*
+
+![Donor Account Dashboard](docs/screenshots/02-my-account.png)
+
+### Administrator Views
+
+#### 3. Admin Overview Dashboard (`docs/screenshots/03-admin-dashboard.png`)
+*Centralized administrative cockpit monitoring pending inventory, verified NGOs, deliveries, and real-time daily activity logs.*
+
+![Admin Overview Dashboard](docs/screenshots/03-admin-dashboard.png)
+
+#### 4. Item Allocation & Inventory (`docs/screenshots/04-item-allocation.png`)
+*Moderation interface to inspect donor submissions, review photo attachments, approve items, and route them to verified partner NGOs.*
+
+![Item Allocation](docs/screenshots/04-item-allocation.png)
+
+#### 5. Logistics Dispatch & Activity Tracking (`docs/screenshots/05-drop-off-tracking.png`)
+*Logistics tracking feed monitoring stage progression from initial pickup to hub transfer and final delivery.*
+
+![Logistics Tracking](docs/screenshots/05-drop-off-tracking.png)
 
 ---
 
@@ -345,65 +365,78 @@ BACKSTREET TECHRUSH CHARITY FLOW/
 ## Local Setup Guide (Windows)
 
 ### Prerequisites
-- Python 3.11 or 3.12 installed ([python.org](https://www.python.org/))
-- Git installed ([git-scm.com](https://git-scm.com/))
-- Local MongoDB Community Server running on `localhost:27017` OR a free MongoDB Atlas connection URI
 
-### Step-by-Step Instructions
+| Tool | Recommended Version | Download Name / Source |
+| :--- | :--- | :--- |
+| **Git** | `2.40+` | `Git-64-bit.exe` from [git-scm.com](https://git-scm.com/) |
+| **Python** | `3.11` or `3.12` | `Windows installer (64-bit)` from [python.org](https://www.python.org/downloads/) *(check "Add python.exe to PATH")* |
+| **MongoDB** | `7.0+` | `MongoDB Community Server (.msi)` from [mongodb.com](https://www.mongodb.com/try/download/community) *(or free MongoDB Atlas URI)* |
 
-1. **Clone the Repository**:
-   ```powershell
-   git clone https://github.com/YOUR-USER/charity-flow.git
-   cd "charity-flow"
-   ```
+---
 
-2. **Create & Activate Virtual Environment**:
-   ```powershell
-   cd charityflow-backend
-   python -m venv venv
-   .\venv\Scripts\activate
-   ```
-   *(If script execution is disabled, run: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`)*
+### Quick Start (Automated PowerShell Launcher)
 
-3. **Install Dependencies**:
-   ```powershell
-   pip install -r requirements.txt
-   ```
+Run the automated one-command launcher from the repository root:
 
-4. **Configure Environment Variables**:
-   Copy `.env.example` to `.env`:
-   ```powershell
-   copy .env.example .env
-   ```
-   Open `.env` in a text editor and provide your secrets:
-   ```ini
-   MONGO_URI=mongodb://localhost:27017/charityflow
-   JWT_SECRET=your_super_secret_jwt_key_at_least_32_characters_long
-   ADMIN_EMAILS=admin@charityflow.org
-   PORT=8000
-   DEMO_MODE=true
-   TRUST_PROXY=false
-   ```
+```powershell
+git clone https://github.com/YOUR-USER/charity-flow.git
+cd "charity-flow"
+.\start.ps1
+```
 
-5. **Seed the Database (One-Command Seeding)**:
-   Ensure your MongoDB instance is running, then seed initial users and partner NGOs:
-   ```powershell
-   python -m seed.seed_all
-   ```
-   *(Output will confirm pre-seeded admin and donor accounts alongside verified NGOs).*
+**What `start.ps1` does automatically**:
+1. Checks for a compatible Python version (3.11 / 3.12).
+2. Creates the isolated virtual environment `charityflow-backend\venv` if missing.
+3. Installs all pinned dependencies from `requirements.txt`.
+4. Initializes `charityflow-backend\.env` with a secure random `JWT_SECRET` and custom/auto-generated admin password.
+5. Verifies MongoDB connectivity with a 3-second ping timeout.
+6. Executes idempotent database seeding (`seed_all`).
+7. Auto-detects free ports starting at `8000` (e.g. shifts to `8001` if Docker Desktop occupies `8000`).
+8. Launches `uvicorn` and opens your browser directly to the application.
 
-6. **Start the Application**:
-   ```powershell
-   uvicorn main:app --reload --port 8000
-   ```
-   *(If port 8000 is occupied by Docker Desktop or another service, use `--port 8001`).*
+---
 
-7. **Access the Application**:
-   Open your browser and navigate to:
-   ```
-   http://localhost:8000/
-   ```
-   The root path automatically serves `login.html`.
+### Manual Setup (Step-by-Step)
+
+If you prefer configuring the environment manually:
+
+```powershell
+# 1. Navigate to backend directory
+cd "charityflow-backend"
+
+# 2. Create & activate virtual environment
+python -m venv venv
+.\venv\Scripts\activate
+
+# 3. Install pinned dependencies
+pip install -r requirements.txt
+
+# 4. Create environment file from template
+copy .env.example .env
+
+# 5. Seed the database (creates demo donor and admin)
+python -m seed.seed_all
+
+# 6. Start the server
+uvicorn main:app --reload --port 8000
+```
+
+Open your browser and navigate to `http://localhost:8000/`.
+
+---
+
+### Troubleshooting Common Issues
+
+| Issue / Symptom | Exact Error Message | Root Cause & Exact Resolution |
+| :--- | :--- | :--- |
+| **Scripts Disabled** | `File ...\start.ps1 cannot be loaded because running scripts is disabled on this system` | Windows PowerShell execution policy blocks unsigned scripts. Run in your terminal:<br>`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`<br>Then re-run `.\start.ps1`. |
+| **Port 8000 Occupied** | `[Errno 10048] error while attempting to bind on address ('0.0.0.0', 8000)` | Another program (such as Docker Desktop) is listening on port 8000. Identify it with:<br>`netstat -ano \| findstr :8000`<br>`start.ps1` will automatically pick the next free port (e.g. `8001`). For manual runs, use `--port 8001`. If accessing frontend independently, run in browser console: `localStorage.setItem("cfApiBase", "http://localhost:8001")`. |
+| **MongoDB Refused** | `ServerSelectionTimeoutError: localhost:27017: [WinError 10061] No connection could be made...` | MongoDB local daemon is not running. In an Administrator PowerShell terminal, run:<br>`net start MongoDB`<br>If using MongoDB Atlas, check your network whitelist (`0.0.0.0/0`) and verify your `MONGO_URI` in `.env`. |
+| **Missing JWT_SECRET** | `RuntimeError: FATAL CONFIG ERROR: 'JWT_SECRET' environment variable is missing.` | The backend `.env` file does not exist or lacks `JWT_SECRET`. Run `copy .env.example .env` inside `charityflow-backend` and set a 32+ character random secret string. |
+| **bcrypt / passlib Conflict** | `AttributeError: module 'bcrypt' has no attribute '__about__'` | Incompatible bcrypt version. Run:<br>`pip install bcrypt==4.0.1 passlib[bcrypt]==1.7.4` inside your activated virtual environment. |
+| **Module Not Found** | `ModuleNotFoundError: No module named 'fastapi'` or `'config'` | Terminal is in the wrong working directory or virtual environment is not activated. Run `cd charityflow-backend`, run `.\venv\Scripts\activate`, and confirm `(venv)` appears before your prompt. |
+| **Blank Page / 404 on `/`** | Browsing `file:///.../login.html` directly or 404 on API endpoints | HTML was opened as a raw file rather than through the running FastAPI server. Always navigate to `http://localhost:8000/` (or the port reported by `start.ps1`). |
+| **Login Fails on Seed Accounts** | `401 Unauthorized: Invalid email or password` | Initial database seeding was not executed. Run:<br>`python -m seed.seed_all`<br>from inside the `charityflow-backend` directory. |
 
 ---
 
