@@ -2,12 +2,8 @@
 
 > An end-to-end donation and logistics management platform connecting generous donors with verified NGOs through an admin-moderated distribution pipeline.
 
----
-
-## Live Demo
-
-- **Hosted URL**: [https://charityflow.onrender.com](https://charityflow.onrender.com) *(Placeholder)*
-- **Hosting Notice**: Deployed on Render's free tier and MongoDB Atlas M0. Free tier web services automatically spin down after 15 minutes of inactivity; initial cold start may take approximately 30–50 seconds to wake up.
+**Live Demo**: [https://charity-flow.onrender.com](https://charity-flow.onrender.com)  
+*(Note: Hosted on Render's free tier and MongoDB Atlas M0. Free hosting sleeps after inactivity, so the initial load can take about 30 seconds to wake up).*
 
 ---
 
@@ -18,10 +14,9 @@ To explore the platform without creating a new account, use the pre-seeded demo 
 | Role | Email | Password | Access Scope |
 | :--- | :--- | :--- | :--- |
 | **Donor** | `donor@charityflow.org` | `Donor@1234` | Submit donations, track drop-offs, send messages |
-| **Admin** | *(Shared on request)* | *(Shared on request)* | Inventory allocation, logistics dispatch, user moderation |
 
 > [!NOTE]
-> For security best practices, administrative credentials are restricted and provided upon evaluation request. You can also seed custom admin credentials during local setup using environment variables.
+> Administrative credentials are kept private and provided upon evaluation request. You can also seed custom admin credentials during local setup using environment variables.
 
 ---
 
@@ -475,6 +470,8 @@ The suite verifies health checks, root routes, 401 unauthenticated enforcement, 
 
 ## Cloud Deployment Guide
 
+The platform is deployed live at **[https://charity-flow.onrender.com](https://charity-flow.onrender.com)** using a free MongoDB Atlas M0 cluster and a Render Web Service.
+
 ### Step 1: MongoDB Atlas Free Cluster (M0)
 1. Sign up for a free account at [mongodb.com/atlas](https://www.mongodb.com/atlas).
 2. Create a free **M0 Sandbox** cluster in your preferred cloud region.
@@ -484,30 +481,41 @@ The suite verifies health checks, root routes, 401 unauthenticated enforcement, 
    ```
    mongodb+srv://<username>:<password>@cluster0.abcde.mongodb.net/charityflow?retryWrites=true&w=majority
    ```
-6. **Remote Database Seeding**: You can seed your remote Atlas database directly from your local terminal before deploying:
+6. **Remote Database Seeding**:
+   The database is a free MongoDB Atlas M0 cluster that was seeded once from a laptop with `python -m seed.seed_all` and a private `SEED_ADMIN_PASSWORD`:
    ```powershell
    $env:MONGO_URI="mongodb+srv://<username>:<password>@cluster0.abcde.mongodb.net/charityflow?retryWrites=true&w=majority"
+   $env:SEED_ADMIN_PASSWORD="YourPrivateAdminPassword"
    python -m seed.seed_all
    ```
+   *(Because the database is seeded once directly from a local machine, the seed environment variables `SEED_ADMIN_PASSWORD` and `SEED_DONOR_PASSWORD` are not needed on Render).*
 
-### Step 2: Render Web Service Deployment
+### Step 2: Render Web Service Deployment (Manual Setup)
+The site runs as a Render Web Service created manually (not from the Blueprint):
+
 1. Sign in to [render.com](https://render.com) and link your GitHub repository.
-2. Click **New +** → **Blueprint** → Select your `charity-flow` repository.
-3. Render automatically reads `render.yaml` at the repository root with the following configuration:
-   - **Environment**: Python 3.11 (`.python-version` at repository root)
+2. Click **New +** → **Web Service** → Select your repository.
+3. Set the service specifications:
+   - **Language**: `Python 3`
+   - **Branch**: `main`
+   - **Root Directory**: *(Leave EMPTY — do not set a root directory)*
    - **Build Command**: `pip install -r charityflow-backend/requirements.txt`
    - **Start Command**: `cd charityflow-backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
-   - **Health Check Path**: `/health`
-4. Set the required Secret Environment Variables in the Render dashboard:
-   - `JWT_SECRET`: Generate a secure 64-character random string (`openssl rand -hex 32`)
+   - **Instance Type**: `Free`
+4. Set the following environment variables in the Render dashboard:
    - `MONGO_URI`: Your MongoDB Atlas connection URI
-   - `ADMIN_EMAILS`: `admin@charityflow.org` (or your chosen admin emails)
-   - `SEED_ADMIN_PASSWORD`: A secure custom password for the pre-seeded admin account
-   - `SEED_DONOR_PASSWORD`: A secure password for the demo donor account
+   - `JWT_SECRET`: Random 64-character secret string (`openssl rand -hex 32`)
+   - `ADMIN_EMAILS`: `admin@charityflow.org`
+   - `PYTHON_VERSION`: `3.11.9`
    - `TRUST_PROXY`: `true`
    - `DEMO_MODE`: `true`
-   - `CORS_ORIGINS`: `*` (or your Render URL `https://your-service.onrender.com`)
+   - `JWT_EXPIRE_HOURS`: `8`
+   - `DEMO_DELIVERY_DELAY_SECONDS`: `90`
+   - `CORS_ORIGINS`: `*` (or `https://charity-flow.onrender.com`)
    - `CLOUDINARY_URL`: *(Optional)* `cloudinary://<api_key>:<api_secret>@<cloud_name>`
+
+> [!TIP]
+> **Optional Blueprint Alternative**: A `render.yaml` file is also maintained at the repository root as an optional one-click Infrastructure-as-Code Blueprint alternative.
 
 ---
 
@@ -532,6 +540,7 @@ The suite verifies health checks, root routes, 401 unauthenticated enforcement, 
 
 ## Known Limitations & Future Roadmap
 
+- **Ephemeral Upload Storage on Free Tier**: Uploaded donation photos stored on the local server disk (`/uploads`) disappear when Render's free instance spins down or restarts. Setting `CLOUDINARY_URL` fixes this by persisting images permanently to Cloudinary cloud storage.
 - **Push / Email Notifications**: Automated emails (via SendGrid or AWS SES) to alert donors when items are accepted or delivered.
 - **Self-Service NGO Registration**: Multi-tier verification pipeline allowing new charities to submit registration credentials and tax-exemption documents.
 - **Monetary Donations (Stripe / Razorpay)**: Integrate payment gateway processing for financial contributions alongside physical goods.
