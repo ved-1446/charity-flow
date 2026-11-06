@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "running",
+  "type": "dataflow",
+  "quality": "showcase",
+  "startedAt": "2026-11-06T20:13:32.400Z",
+  "specification": {
+    "path": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\.archify\\dataflow-charityflow-20261107-120000\\candidate.json",
+    "sha256": "e2738d2002139463592761f93197a2ef350f8939356113ed772c20bb98e02bb5",
+    "bytes": 5471
+  },
+  "artifact": {
+    "path": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\docs\\diagrams\\charityflow-dataflow.html"
+  },
+  "stages": {},
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "diagnostics": [],
+  "evidence": {
+    "receipt": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\docs\\diagrams\\charityflow-dataflow.finalize.json",
+    "summaryReceipt": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\docs\\diagrams\\charityflow-dataflow.finalize-summary.json"
+  },
+  "visualReview": "not-requested"
+}

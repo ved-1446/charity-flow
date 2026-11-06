@@ -91,6 +91,18 @@ To explore the platform without creating a new account, use the pre-seeded demo 
 
 ---
 
+## Architecture & Diagrams
+
+Interactive diagrams of how the project works (open the `.html` files in any browser, no server needed):
+
+- **[System architecture](docs/diagrams/charityflow-architecture.html)**: components, the primary request path and trust boundaries.
+- **[Data flow](docs/diagrams/charityflow-dataflow.html)**: how data enters, is processed and stored, and where sensitive data (credentials, donor PII, photos) crosses a trust boundary.
+- **[Sequence](docs/diagrams/charityflow-sequence.html)**: step-by-step donation submission (`POST /donate`), including the 401 and 400 failure paths.
+
+Main components: Donor/Admin Browser, Static Frontend, FastAPI API, Auth Guard, Delivery Simulator (demo mode), Local Uploads, MongoDB Atlas and optional Cloudinary.
+
+---
+
 ## System Architecture
 
 ```mermaid

@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "command": "deliver",
+  "status": "pending",
+  "receiptId": "04bd277d-351f-4ec3-92fd-e17384b725ac",
+  "input": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\.archify\\dataflow-charityflow-20261107-120000\\candidate.json",
+  "output": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\docs\\diagrams\\charityflow-dataflow.html"
+}
