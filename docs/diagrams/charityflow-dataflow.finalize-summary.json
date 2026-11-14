@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "dataflow",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\.archify\\dataflow-charityflow-20261107-120000\\candidate.json",
+    "sha256": "094c408131121714d5538adf6f8fb0cfe983668947f5eaf028ead8731264f780",
+    "bytes": 5425
+  },
+  "artifact": {
+    "path": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\docs\\diagrams\\charityflow-dataflow.html"
+  },
+  "gates": {
+    "validate": "fail",
+    "deliver": "not-run",
+    "check": "not-run",
+    "browser-check": "not-run"
+  },
+  "failedStage": "validate",
+  "diagnostics": [
+    {
+      "code": "repository-evidence/line-out-of-range",
+      "severity": "error",
+      "message": "/nodes/7/sources/1 requests line 46, but charityflow-backend/models/user.py has 33 lines at revision 6ea4a4dcbf1dd8a43e83beb3a2867d6f41d22b69.",
+      "subject": {
+        "surface": "repository-evidence",
+        "path": "/nodes/7/sources/1",
+        "diagramType": "dataflow",
+        "collection": "nodes",
+        "nodeId": "mongo"
+      },
+      "evidence": {
+        "sourcePath": "charityflow-backend/models/user.py",
+        "requestedLine": 46,
+        "lineCount": 33,
+        "revision": "6ea4a4dcbf1dd8a43e83beb3a2867d6f41d22b69"
+      },
+      "supportedFixes": [
+        "use a line range that exists at the pinned revision"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\docs\\diagrams\\charityflow-dataflow.finalize.json",
+    "summaryReceipt": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\docs\\diagrams\\charityflow-dataflow.finalize-summary.json"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 517,
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "nextAction": {
+    "action": "edit-in-place",
+    "candidate": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\.archify\\dataflow-charityflow-20261107-120000\\candidate.json",
+    "constraint": "Preserve unaffected semantics and geometry; apply each diagnostic's supportedFixes, or the fix its message names, and do not replace the whole candidate.",
+    "then": "finalize-once"
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\.archify\\sequence-charityflow-20261107-120000\\candidate.json",
+    "sha256": "12308ed29c3fb6b821a0fd2d63632b047cadac757791c062cf6bfb7ade6b189c",
+    "bytes": 4997
+  },
+  "artifact": {
+    "path": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\docs\\diagrams\\charityflow-sequence.html"
+  },
+  "gates": {
+    "validate": "fail",
+    "deliver": "not-run",
+    "check": "not-run",
+    "browser-check": "not-run"
+  },
+  "failedStage": "validate",
+  "diagnostics": [
+    {
+      "code": "layout/constraint",
+      "severity": "error",
+      "message": "Messages \"POST /donate (Bearer JWT)\" and \"decode HS256 token\" are less than 28px apart and share horizontal space — spread their y values.",
+      "subject": {
+        "diagramType": "sequence"
+      }
+    },
+    {
+      "code": "sequence/note-overlap",
+      "severity": "error",
+      "message": "Note on message \"upload (if CLOUDINARY_URL)\" wraps to 3 lines (down to y=349) and reaches message \"secure_url\" at y=350 — move \"secure_url\" and later messages down so it sits at y=371 or below, or shorten the note.",
+      "subject": {
+        "diagramType": "sequence",
+        "message": "upload (if CLOUDINARY_URL)",
+        "path": "/messages/4/note",
+        "from": "api",
+        "to": "cloudinary"
+      },
+      "evidence": {
+        "lines": 3,
+        "note": {
+          "x": 515.5,
+          "y": 314.6,
+          "width": 96.6,
+          "height": 34.4
+        },
+        "blocker": {
+          "message": "secure_url",
+          "path": "/messages/5/y",
+          "y": 350,
+          "kind": "message label",
+          "bounds": {
+            "x": 521.8,
+            "y": 330,
+            "width": 78,
+            "height": 18
+          }
+        },
+        "requiredY": 371
+      }
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 2,
+    "shown": 2,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\docs\\diagrams\\charityflow-sequence.finalize.json",
+    "summaryReceipt": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\docs\\diagrams\\charityflow-sequence.finalize-summary.json"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 506,
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "nextAction": {
+    "action": "edit-in-place",
+    "candidate": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\.archify\\sequence-charityflow-20261107-120000\\candidate.json",
+    "constraint": "Preserve unaffected semantics and geometry; apply each diagnostic's supportedFixes, or the fix its message names, and do not replace the whole candidate.",
+    "then": "finalize-once"
+  }
+}

@@ -20,6 +20,14 @@ To explore the platform without creating a new account, use the pre-seeded demo 
 
 ---
 
+## Demo Video
+
+A 30-second launch video that follows one donation from the donor form to delivery: [`brag-output/brag.mp4`](brag-output/brag.mp4) (poster frame: [`brag-output/brag.jpg`](brag-output/brag.jpg)). The scenes are recreated in HTML from the app's screens rather than screen-recorded. Its plan and Hyperframes source are in `brag-output/`.
+
+Music in the video: Sascha Ende, [ende.app](https://ende.app/en) (CC BY 4.0).
+
+---
+
 ## Application Screenshots
 
 ### Donor Views
@@ -68,12 +76,12 @@ To explore the platform without creating a new account, use the pre-seeded demo 
 - **Real-Time Analytics**: Live aggregate statistics across pending items, active deliveries, delivered goods, and registered accounts.
 - **Inventory Moderation**: Accept or reject pending donations with instant status updates.
 - **NGO Allocation**: Route accepted items to verified partner NGOs with automatic logistics entry creation.
-- **Logistics Dispatch**: Stage-by-stage tracking control (`allocated` → `picked_up` → `at_hub` → `delivered`) with delivery cancellation and hub revert features.
-- **Automated Delivery Simulation**: Background task pipeline simulating real-world courier transport stages for demonstrations.
+- **Logistics Dispatch**: Stage-by-stage tracking control. Allocating a donation creates a logistics entry at `picked_up`, which the admin advances through `at_hub` → `delivered`, with delivery cancellation and hub revert features.
+- **Automated Delivery Simulation**: When `DEMO_MODE=true`, allocating a donation starts a background task that moves it to `at_hub` and then `delivered`, waiting `DEMO_DELIVERY_DELAY_SECONDS` (default 90) before each step.
 - **User & NGO Directory**: Inspect registered donor accounts, verified partner NGOs, and system roles.
 - **Audit Logging**: Comprehensive UTC audit logs tracking all administrator actions and donations.
 - **Inquiry Management**: Review contact submissions, toggle spam flags, and publish replies visible on donor dashboards.
-- **Demo Data Reset**: One-click idempotent reset button restoring demo inventory without wiping registered users.
+- **Demo Data Reset**: `POST /admin/reset-test-data` restores demo inventory without wiping registered users. It is an API endpoint only (no page in the frontend calls it) and returns an error unless `DEMO_MODE=true`.
 
 ---
 
@@ -178,11 +186,15 @@ BACKSTREET TECHRUSH CHARITY FLOW/
 │   ├── js/
 │   │   ├── config.js            # Environment API_BASE resolver
 │   │   └── common.js            # Shared helpers (apiFetch, escapeHtml, auth, date formatting)
-│   └── ...                      # Stylesheets, icons, client images
+│   (no stylesheets or images here; pages carry their own CSS)
+│
+├── start.ps1                    # One-command Windows launcher (venv, deps, .env, seed, free port, run)
 │
 ├── docs/
-│   └── screenshots/
-│       └── .gitkeep             # Screenshot placeholder directory
+│   ├── screenshots/             # 5 application screenshots used in this README
+│   └── diagrams/                # Interactive architecture, data-flow and sequence diagrams (.html)
+│
+├── brag-output/                 # Launch video (brag.mp4), poster, plan and Hyperframes composition source
 │
 ├── aboutus.html                 # About Charity Flow mission & values
 ├── admin.html                   # Admin overview dashboard
@@ -214,7 +226,7 @@ BACKSTREET TECHRUSH CHARITY FLOW/
     │   ├── donation.py          # Donation record model
     │   ├── logistics.py         # Logistics tracker model
     │   ├── ngo.py               # Partner NGO schema
-    │   ├── contact.py           # Contact message schema
+    │   ├── contact_message.py   # Contact message schema
     │   └── activity_log.py      # System audit log schema
     │
     ├── routes/                  # Modular API endpoints
@@ -263,7 +275,7 @@ BACKSTREET TECHRUSH CHARITY FLOW/
 | `POST` | `/admin/allocate` | Admin | Allocate an accepted donation to an NGO & create shipment |
 | `GET` | `/admin/my-activity` | Admin | Personal audit log entries for the current administrator |
 | `GET` | `/admin/all-activity` | Admin | Platform-wide administrator audit log |
-| `POST` | `/admin/reset-test-data` | Admin | Restore demo inventory and shipments to clean initial state |
+| `POST` | `/admin/reset-test-data` | Admin | Restore demo inventory and shipments to clean initial state (only when `DEMO_MODE=true`) |
 | `GET` | `/logistics` | Admin | Retrieve all active and completed shipment entries |
 | `PATCH` | `/logistics/{id}` | Admin | Advance shipment status (`picked_up` → `at_hub` → `delivered`) |
 | `PATCH` | `/logistics/{id}/cancel-delivery` | Admin | Revert a delivered shipment back to active transit |
@@ -301,7 +313,7 @@ BACKSTREET TECHRUSH CHARITY FLOW/
 | `location` | `string` | Donor pickup city or address |
 | `description` | `string` | Detailed item description |
 | `photos` | `array[string]` | Relative paths (`uploads/...`) or Cloudinary HTTPS URLs |
-| `status` | `string` | `"pending"`, `"accepted"`, `"rejected"`, `"allocated"`, `"delivered"` |
+| `status` | `string` | `"pending"`, `"accepted"`, `"rejected"`, `"allocated"`, `"at_hub"`, `"delivered"` |
 | `created_at` | `ISODate` | Submission timestamp (indexed) |
 
 ### 3. `logistics`
@@ -312,7 +324,7 @@ BACKSTREET TECHRUSH CHARITY FLOW/
 | `donor_email` | `string` | Associated donor email |
 | `target_ngo` | `string` | Assigned NGO contact email |
 | `ngo_name` | `string` | Human-readable name of the receiving organization |
-| `stage` | `string` | Shipment phase: `"allocated"`, `"picked_up"`, `"at_hub"`, `"delivered"` |
+| `stage` | `string` | Shipment phase: `"picked_up"` (set on allocation), `"at_hub"`, `"delivered"` |
 | `status` | `string` | Shipment status: `"active"` or `"completed"` |
 | `created_at` | `ISODate` | Initial dispatch creation timestamp |
 | `updated_at` | `ISODate` | Last stage advancement timestamp (indexed) |
@@ -366,6 +378,30 @@ BACKSTREET TECHRUSH CHARITY FLOW/
 - **Proxy-Aware Sliding Window Rate Limiting**: In-memory rate limiting applied to sensitive endpoints (`/auth/login`, `/auth/register`, `/contact`). When `TRUST_PROXY=true`, client IP extraction reads the first IP of `X-Forwarded-For`; when `false`, it falls back to `request.client.host` to prevent header spoofing in local development.
 - **CORS Protection**: Controlled via `CORS_ORIGINS`. When restricted to production domains, credentials are explicitly allowed; when set to `*` for local development, `allow_credentials` is disabled.
 - **Input Validation**: Pydantic models validate email RFC compliance and enforce minimum 8-character passwords with automatic whitespace trimming and lowercasing.
+
+---
+
+## Configuration
+
+Settings are read from environment variables, or from `charityflow-backend/.env` (loaded by `config.py`). Names only; set your own values:
+
+| Variable | Required | Purpose |
+| :--- | :--- | :--- |
+| `JWT_SECRET` | Yes | Signs JWTs. The server refuses to start without it. |
+| `MONGO_URI` | Yes | MongoDB connection string. The server refuses to start without it. |
+| `JWT_EXPIRE_HOURS` | No | Token lifetime in hours (code default `8`). |
+| `ADMIN_EMAILS` | No | Comma-separated admin email whitelist, cross-checked with the role claim. |
+| `CORS_ORIGINS` | No | Allowed origins, comma-separated (default `*`). |
+| `PORT` | No | Port used when running `python main.py` (default `8000`). |
+| `TRUST_PROXY` | No | `true` to take the client IP from `X-Forwarded-For` for rate limiting. |
+| `DEMO_MODE` | No | `true` enables the delivery simulation and `/admin/reset-test-data`. |
+| `DEMO_DELIVERY_DELAY_SECONDS` | No | Delay before each simulated step (default `90`). |
+| `CLOUDINARY_URL` | No | If set, uploads go to Cloudinary; otherwise to local `/uploads`. |
+| `SEED_ADMIN_PASSWORD` / `SEED_DONOR_PASSWORD` | No | Passwords used by `python -m seed.seed_all`. |
+
+Other variables: `TEST_BASE_URL` (smoke test) and `NO_BROWSER` (set it to stop `start.ps1` from opening a browser).
+
+`charityflow-backend/.env.example` exists and is used by `start.ps1` and the manual setup below. TODO: confirm it lists the same variables as the table above (it was not read while updating this README).
 
 ---
 
@@ -471,12 +507,17 @@ Open your browser and navigate to `http://localhost:8000/`.
 5. Select **Type: Bearer Token** and paste the token in the **Token** field.
 
 ### 3. Automated Smoke Test Suite
-Run the 56-point automated smoke test against your running server:
+Run the automated smoke test against your running server (TODO: confirm the exact number of checks; the previous README said 56, but `tests/smoke_test.py` contains about 80 `record(...)` calls):
 ```powershell
 cd charityflow-backend
 python tests/smoke_test.py http://127.0.0.1:8000
 ```
 The suite verifies health checks, root routes, 401 unauthenticated enforcement, 403 donor isolation on admin paths, photo upload signature checks, logistics progression, and contact reply tracking.
+
+Notes (from `tests/smoke_test.py`):
+- The base URL can also come from `TEST_BASE_URL`; with no argument it defaults to `http://127.0.0.1:8001`.
+- It imports `config`, so it needs the same `JWT_SECRET` (from `charityflow-backend/.env`) as the running server.
+- It logs in with the seeded `admin@charityflow.org` and `donor@charityflow.org` accounts using passwords hard-coded in the test file, and it calls `/admin/reset-test-data`. TODO: confirm that your seeded admin password (`SEED_ADMIN_PASSWORD`) matches the one the test expects, and that the server runs with `DEMO_MODE=true`.
 
 ---
 

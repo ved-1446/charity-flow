@@ -1,0 +1,1 @@
+Charity Flow follows one donation from a donor's form to a verified NGO: admin review, allocation, logistics and an audit trail in a single pipeline. Live demo: charity-flow.onrender.com

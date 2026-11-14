@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "92d4fa23-71f0-4514-a410-f12c15673c7e",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\.archify\\architecture-charityflow-20261107-120000\\candidate.json",
+  "output": "C:\\Users\\Ved\\OneDrive\\Desktop\\BACKSTREET TECHRUSH CHARITY FLOW\\docs\\diagrams\\charityflow-architecture.html",
+  "specification": {
+    "sha256": "8448c62cf3a8c5cc6aa8464cb1af24c86b3995c7cc686a364d315ff8ebfb10ab",
+    "bytes": 5298
+  },
+  "artifact": {
+    "sha256": "d90a9e457acfe9287269403c43b9aaee4f1634135af060f6e66bade3c5eb5b51",
+    "bytes": 853039
+  }
+}
